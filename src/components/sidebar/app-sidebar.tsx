@@ -45,7 +45,7 @@ const items = [
 
 export function AppSidebar() {
   return (
-    
+
     <Sidebar collapsible="icon" className="h-screen border-r bg-muted">
       <SidebarHeader>
         <SidebarMenuButton
@@ -70,25 +70,23 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className={({ isActive }) =>
-                        `flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                          isActive
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                            : "text-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                        }`
-                      }
-                    >
-            
-                      <item.icon
-                        className={`h-4 w-4 ${
-                          // Optional: Apply dynamic icon color based on active state
-                          ({ isActive }: { isActive: boolean }) =>
-                            isActive ? "text-sidebar-accent-foreground" : "text-foreground"
-                        }`}
-                      />
-                      <span>{item.title}</span>
+                    <NavLink to={item.url}>
+                      {({ isActive }) => (
+                        <div
+                          className={`w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${isActive
+                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                              : "text-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                            }`}
+                        >
+                          <item.icon
+                            className={`h-4 w-4 ${isActive
+                                ? "text-sidebar-accent-foreground"
+                                : "text-foreground"
+                              }`}
+                          />
+                          <span>{item.title}</span>
+                        </div>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

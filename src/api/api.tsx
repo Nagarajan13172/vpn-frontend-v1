@@ -1,0 +1,1 @@
+export const base_path = "https://api.vpn.prithivi.succeedex.in";
