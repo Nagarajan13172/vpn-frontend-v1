@@ -13,7 +13,7 @@ const Login = () => {
           alt="VPN Security" 
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 z-20 flex flex-col justify-center px-12 text-white">
+        {/* <div className="absolute inset-0 z-20 flex flex-col justify-center px-12 text-white">
           <div className="max-w-md">
             <h1 className="text-4xl font-bold mb-6 leading-tight">
               Your Privacy
@@ -40,7 +40,7 @@ const Login = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Right Half - Login Form */}

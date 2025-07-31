@@ -4,16 +4,56 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useMutation } from '@tanstack/react-query';
+import { base_path } from '@/api/api';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router';
+import { setCookie } from 'typescript-cookie';
 
 const VpnLoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', { username, password });
+    setLoading(true)
+    mutation.mutate(formData)
   };
+
+  const mutation = useMutation({
+    mutationFn: async (formData: { username: string, password: string }) => {
+      const response = await fetch(`${base_path}/api/users/login`, {
+        method: 'POST',
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Login failed');
+      }
+      return response.json();
+    },
+    onError: (error) => {
+      setLoading(false);
+      toast.error(`Login failed: ${error.message}`);
+    },
+    onSuccess: (data) => {
+      setLoading(false);
+      toast.success('Login successful!');
+      setCookie('authToken', data.access_token, {
+        expires: 1, // 1 day
+        path: '/',
+        secure: true, // ✅ important in production
+        sameSite: 'Strict',
+      }); //
+      navigate('/');
+      console.log(data);
+    }
+  })
 
   return (
     <Card className="w-full max-w-md border-0 shadow-2xl bg-card/50 backdrop-blur-sm">
@@ -38,8 +78,8 @@ const VpnLoginForm = () => {
               id="username"
               type="text"
               placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               className="h-12 border-border/50 focus:border-vpn-primary transition-colors"
               required
             />
@@ -53,8 +93,8 @@ const VpnLoginForm = () => {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="h-12 pr-12 border-border/50 focus:border-vpn-primary transition-colors"
                 required
               />
@@ -69,9 +109,9 @@ const VpnLoginForm = () => {
           </div>
           <div className="flex items-center justify-between text-sm">
             <label className="flex items-center space-x-2 cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="w-4 h-4 rounded border-border/50 text-vpn-primary focus:ring-vpn-primary" 
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-border/50 text-vpn-primary focus:ring-vpn-primary"
               />
               <span className="text-muted-foreground">Remember me</span>
             </label>
@@ -79,13 +119,14 @@ const VpnLoginForm = () => {
               Forgot password?
             </a>
           </div>
-          <Button 
-            type="submit" 
-            size="lg" 
+          <Button
+            type="submit"
+            size="lg"
             className="w-full text-base"
+            disabled={loading}
           >
             <Lock className="w-5 h-5" />
-            Connect Securely
+            {loading ? 'Logging in...' : 'Login'}
           </Button>
         </form>
         <div className="text-center">
