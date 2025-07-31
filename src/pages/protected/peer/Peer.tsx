@@ -25,6 +25,7 @@ import {
   Legend,
 } from 'chart.js';
 import { formatDataSize, formatTimeAgo, peerStatus } from '@/utils/Formater';
+import { useNavigate } from 'react-router';
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend);
@@ -104,6 +105,8 @@ const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: {
     },
   };
 
+  const navigate = useNavigate();
+
   return (
     <Card className="flex flex-col">
       <CardHeader>
@@ -124,8 +127,8 @@ const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>View Details</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEdit(peer)}>Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/peers/${peer.id}`); }}>View Details</DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(peer); }}>Edit</DropdownMenuItem>
                 <DropdownMenuItem>Disconnect</DropdownMenuItem>
                 <DropdownMenuItem className="text-red-500" onClick={() => onDelete(peer)}>
                   Remove Peer

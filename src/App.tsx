@@ -5,6 +5,7 @@ import SideMenuLayout from './pages/layout';
 import Peer from './pages/protected/peer/Peer';
 import Login from './auth/Login';
 import AuthLayer from './auth/AuthLayer';
+import PeerDetails from './pages/protected/peerDetails/PeerDetails';
 
 function App() {
   const location = useLocation();
@@ -20,6 +21,7 @@ function App() {
             {/* Define your routes here */}
             <Route path="/" element={<Dashboard />} />
             <Route path="/peer" element={<Peer />} />
+            <Route path="/peers/:id" element={<PeerDetails />} />
           </Route>
         </Route>
       </Routes>
