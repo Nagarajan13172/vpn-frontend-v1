@@ -1,46 +1,56 @@
-"use client"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import VpnLoginForm from './components/VpnLoginForm';
+import BgImg from "../../public/bgimg.png"
 
-
-export default function LoginPage() {
+const Login = () => {
   return (
-    <div className="relative flex flex-col justify-center items-center min-h-screen bg-background overflow-hidden">
-      <div
-        className="absolute inset-0 w-full h-full bg-cover bg-center"
-        style={{ backgroundImage: "url('/background.png')" }}
-      >
-        <div className="absolute inset-0 bg-black/60" />
+    <div className="min-h-screen flex">
+      {/* Left Half - Hero Image */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-dark opacity-60 z-10"></div>
+        <img 
+          src={BgImg}
+          alt="VPN Security" 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 z-20 flex flex-col justify-center px-12 text-white">
+          <div className="max-w-md">
+            <h1 className="text-4xl font-bold mb-6 leading-tight">
+              Your Privacy
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+                Our Priority
+              </span>
+            </h1>
+            <p className="text-lg text-gray-200 mb-8 leading-relaxed">
+              Connect to our global network of secure servers and browse the internet with complete privacy and freedom.
+            </p>
+            <div className="space-y-4 text-sm">
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                <span>Military-grade encryption</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                <span>Zero-log policy</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                <span>Global server network</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="relative z-10 w-full max-w-md mx-auto">
-        <Card className="bg-card/80 backdrop-blur-sm border-border/40">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Secure Login</CardTitle>
-            <CardDescription>Enter your credentials to access your VPN dashboard.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="name@example.com" required className="bg-background/70" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-               
-                </div>
-                <Input id="password" type="password" required className="bg-background/70" />
-              </div>
-              <Button type="submit" className="w-full">
-                Login
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+
+      {/* Right Half - Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-subtle">
+        <div className="w-full max-w-md">
+          <VpnLoginForm />
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default Login;
