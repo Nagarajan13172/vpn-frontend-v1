@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Separator } from "@radix-ui/react-separator";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
-import { ModeToggle } from "@/components/ThemeProvider/ModeToggle";
+import { ModeToggle } from "@/components/ThemeProvider/mode-toggle";
 
 export default function SideMenuLayout() {
     const open = false;

@@ -1,4 +1,4 @@
-import { Calendar, ChevronUp, Home, Inbox, Search, Settings, User2 } from "lucide-react"
+import { Calendar, ChevronUp, Home, Inbox, Search, User2 } from "lucide-react"
 
 import {
   Sidebar,
@@ -17,29 +17,24 @@ import logo from "../../../public/logo.png"
 // Menu items.
 const items = [
   {
-    title: "Home",
+    title: "Dashboard",
     url: "#",
     icon: Home,
   },
   {
-    title: "Inbox",
+    title: "Peer",
     url: "#",
     icon: Inbox,
   },
   {
-    title: "Calendar",
+    title: "Settings",
     url: "#",
     icon: Calendar,
   },
   {
-    title: "Search",
+    title: "Help",
     url: "#",
     icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
   },
 ]
 
