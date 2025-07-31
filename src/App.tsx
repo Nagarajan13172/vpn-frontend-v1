@@ -6,6 +6,8 @@ import Peer from './pages/protected/peer/Peer';
 import Login from './auth/Login';
 import AuthLayer from './auth/AuthLayer';
 import PeerDetails from './pages/protected/peerDetails/PeerDetails';
+import { Users } from './pages/protected/users/Users';
+
 
 function App() {
   const location = useLocation();
@@ -22,6 +24,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/peer" element={<Peer />} />
             <Route path="/peers/:id" element={<PeerDetails />} />
+            <Route path="/users" element={<Users />} />
           </Route>
         </Route>
       </Routes>

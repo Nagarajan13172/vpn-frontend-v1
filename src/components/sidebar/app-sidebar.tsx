@@ -31,6 +31,11 @@ const items = [
     url: "/peer",
     icon: Inbox,
   },
+   {
+    title: "Users",
+    url: "/users",
+    icon: Inbox,
+  },
   {
     title: "Settings",
     url: "/settings",
