@@ -2,6 +2,7 @@ import { Route, Routes, useLocation } from 'react-router'
 import './App.css'
 import Dashboard from './pages/protected/Dashboard/Dashboard'
 import SideMenuLayout from './pages/layout';
+import Peer from './pages/protected/peer/Peer';
 
 function App() {
   const location = useLocation();
@@ -13,6 +14,7 @@ function App() {
       <Route element={<SideMenuLayout />}>
         {/* Define your routes here */}
         <Route path="/" element={<Dashboard />} />
+        <Route path="/peer" element={<Peer />} />
       </Route>
     </Routes>
     </>

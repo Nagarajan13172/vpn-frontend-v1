@@ -10,7 +10,7 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { ModeToggle } from "@/components/ThemeProvider/mode-toggle";
 
 export default function SideMenuLayout() {
-    const open = false;
+    const open = true;
 
     return (
         <SidebarProvider defaultOpen={open}>

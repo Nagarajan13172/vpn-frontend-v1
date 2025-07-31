@@ -1,5 +1,4 @@
 // theme-provider.tsx
-/* eslint-disable react-refresh/only-export-components */
 import { type ReactNode, createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark" | "system";
