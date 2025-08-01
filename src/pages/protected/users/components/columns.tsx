@@ -12,7 +12,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { Role, User } from "@/types";
 
 export const generateColumns = (
-  onEdit: (user: User) => void
+  onEdit: (user: User) => void,
+  onDelete: (user: User) => void
 ): ColumnDef<User>[] => [
   {
     id: "select",
@@ -77,7 +78,7 @@ export const generateColumns = (
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEdit(user)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEdit(user)}>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDelete(user)}>Delete</DropdownMenuItem>
             <DropdownMenuItem onClick={() => onEdit(user)}>View</DropdownMenuItem>
 
           </DropdownMenuContent>

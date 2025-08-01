@@ -47,6 +47,7 @@ const UsersPage = () => {
   });
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,7 +70,16 @@ const UsersPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleDeleteRequest = (user: User) => {
+    setSelectedUser(user);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    deleteMutation.mutate();
+  };
+
+    const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditing) {
       editMutation.mutate(formData);
@@ -89,10 +99,7 @@ const UsersPage = () => {
         },
         body: JSON.stringify(formData),
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.detail || "Failed to create user.");
-      }
+      if (!res.ok) throw new Error((await res.json()).detail || "Failed to create user.");
       return res.json();
     },
     onSuccess: async () => {
@@ -100,9 +107,7 @@ const UsersPage = () => {
       await queryClient.invalidateQueries({ queryKey: ["users"] });
       setIsModalOpen(false);
     },
-    onError: (err) => {
-      toast.error(err.message);
-    },
+    onError: (err) => toast.error(err.message),
   });
 
   const editMutation = useMutation({
@@ -116,10 +121,7 @@ const UsersPage = () => {
         },
         body: JSON.stringify(formData),
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.detail || "Failed to update user.");
-      }
+      if (!res.ok) throw new Error((await res.json()).detail || "Failed to update user.");
       return res.json();
     },
     onSuccess: async () => {
@@ -129,9 +131,29 @@ const UsersPage = () => {
       setSelectedUser(null);
       setIsEditing(false);
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const token = getAuthToken();
+      const res = await fetch(`${base_path}/api/users/${selectedUser?.id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error((await res.json()).detail || "Failed to delete user.");
+      return res.json();
     },
+    onSuccess: async () => {
+      toast.success("User deleted successfully");
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      setSelectedUser(null);
+      setIsDeleteModalOpen(false);
+    },
+    onError: (err) => toast.error(`Error deleting user: ${err.message}`),
   });
 
   const { data: roleData = [] } = useQuery({
@@ -158,7 +180,7 @@ const UsersPage = () => {
     },
   });
 
-  const columns = generateColumns(openEditModal);
+  const columns = generateColumns(openEditModal, handleDeleteRequest);
 
   return (
     <div className="container mx-auto">
@@ -201,6 +223,24 @@ const UsersPage = () => {
               </form>
             </DialogContent>
           </Dialog>
+
+          <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirm Deletion</DialogTitle>
+              </DialogHeader>
+              <p>Are you sure you want to delete user "{selectedUser?.username}"?</p>
+              <div className="flex justify-end gap-4 pt-4">
+                <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={confirmDelete}>
+                  Delete
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Button variant="outline">Download All</Button>
         </div>
       </div>
