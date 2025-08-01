@@ -6,7 +6,7 @@ import Peer from './pages/protected/peer/Peer';
 import Login from './auth/Login';
 import AuthLayer from './auth/AuthLayer';
 import PeerDetails from './pages/protected/peerDetails/PeerDetails';
-import { Users } from './pages/protected/users/Users';
+import Users from './pages/protected/users/Users';
 
 
 function App() {
