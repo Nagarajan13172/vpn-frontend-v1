@@ -1,3 +1,6 @@
+
+"use client";
+
 import { type ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,20 +8,29 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export type VPNUser = {
+export type Role = {
   id: string;
-  username: string;
-  role: "admin" | "user" | "guest";
-  peer: string;
-  createdAt: string;
+  role: string;
+  created_at: string;
+  created_by: string | null;
+  updated_at: string;
+  updated_by: string | null;
 };
 
-export const columns: ColumnDef<VPNUser>[] = [
+export type User = {
+  id: string;
+  username: string;
+  role: Role;
+  role_id: string;
+  peer_count: number;
+  created_at: string;
+};
+
+export const columns: ColumnDef<User>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -56,22 +68,30 @@ export const columns: ColumnDef<VPNUser>[] = [
   {
     accessorKey: "role",
     header: "Role",
+    cell: ({ row, }) => {
+      const role = row.getValue("role") as Role;
+      const roleName = role ? role.role : "Unknown";
+      return <div>{roleName}</div>;
+    },
   },
   {
-    accessorKey: "peer",
-    header: "Peer",
+    accessorKey: "peer_count",
+    header: "Peer Count",
+    cell: ({ row }) => {
+      const peerCount = row.getValue("peer_count") as number;
+      return <div>{peerCount}</div>;
+    },
   },
   {
-    accessorKey: "createdAt",
+    accessorKey: "created_at",
     header: "Created At",
     cell: ({ row }) => {
-      const date = new Date(row.getValue("createdAt"));
+      const date = new Date(row.getValue("created_at") as string);
       return <div>{date.toLocaleDateString()}</div>;
     },
   },
   {
     id: "actions",
-    header: "Actions",
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -83,7 +103,6 @@ export const columns: ColumnDef<VPNUser>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => alert(`View user ${user.id}`)}>
               View
             </DropdownMenuItem>
