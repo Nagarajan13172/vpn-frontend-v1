@@ -1,17 +1,18 @@
-import {  Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { flexRender } from "@tanstack/react-table";
+import {  Table as TableComponent, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { flexRender } from "@tanstack/react-table"; // Value import
+import type { HeaderGroup, Row, Table as TableType } from "@tanstack/react-table"; 
 
 interface DataTableProps<TData> {
-  table: Table<TData>;
+  table: TableType<TData>;
 }
 
 export function DataTable<TData>({ table }: DataTableProps<TData>) {
   return (
     <div className="w-full">
       <div className="rounded-md border">
-        <Table>
+        <TableComponent>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup:) => (
+            {table.getHeaderGroups().map((headerGroup: HeaderGroup<TData>) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
@@ -25,9 +26,9 @@ export function DataTable<TData>({ table }: DataTableProps<TData>) {
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
+              table.getRowModel().rows.map((row: Row<TData>) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                  {row.getVisibleCells().map((cell) => (
+                  {row.getVisibleCells().map((cell ) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
@@ -42,7 +43,7 @@ export function DataTable<TData>({ table }: DataTableProps<TData>) {
               </TableRow>
             )}
           </TableBody>
-        </Table>
+        </TableComponent>
       </div>
     </div>
   );
