@@ -1,8 +1,9 @@
+// src/pages/users/index.tsx
+"use client";
 
 import { useState } from "react";
+import { generateColumns } from "./components/columns";
 import { ClientTable } from "./components/client-table";
-import { columns } from "./components/columns";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -27,8 +29,15 @@ interface NewUser {
   username: string;
   password: string;
   role_id: string;
-  peer_count?: number | string; // Optional, as it might not be required during creation
+  peer_count?: number | string;
 }
+
+interface User extends NewUser {
+  id: string;
+  role: { id: string; role: string };
+  created_at: string;
+}
+
 const UsersPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<NewUser>({
@@ -36,10 +45,9 @@ const UsersPage = () => {
     password: "",
     role_id: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const queryClient = useQueryClient(); // ✅ React Query Client for refetching data
-
-
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -50,171 +58,150 @@ const UsersPage = () => {
     setFormData((prev) => ({ ...prev, role_id: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    mutation.mutate({ ...formData });
-
+  const openEditModal = (user: User) => {
+    setSelectedUser(user);
+    setFormData({
+      username: user.username,
+      password: "",
+      role_id: user.role.id,
+    });
+    setIsEditing(true);
+    setIsModalOpen(true);
   };
 
-  //mutation logic to add user
-  const mutation = useMutation<NewUser, unknown, typeof formData>({
-    mutationFn: async (formData) => {
-      const authToken = getAuthToken();
-      const response = await fetch(`${base_path}/api/users`, {
-        method: 'POST',
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isEditing) {
+      editMutation.mutate(formData);
+    } else {
+      createMutation.mutate(formData);
+    }
+  };
+
+  const createMutation = useMutation({
+    mutationFn: async (formData: NewUser) => {
+      const token = getAuthToken();
+      const res = await fetch(`${base_path}/api/users`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw (data.detail);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.detail || "Failed to create user.");
       }
-      return response.json();
+      return res.json();
     },
     onSuccess: async () => {
-      toast.success("User added successfully");
-      await queryClient.invalidateQueries({ queryKey: ['users'] });
-      setIsLoading(false);
+      toast.success("User created successfully");
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
       setIsModalOpen(false);
     },
-
-    onError: (error) => {
-      toast.error(`Error adding user: ${error}`);
-      setIsLoading(false);
-    }
-  });
-
-  //api for Users Role
-
-  const { data: roleData } = useQuery({
-    queryKey: ['roles'],
-    queryFn: async () => {
-      const authToken = getAuthToken();
-      if (!authToken) throw new Error("No auth token found");
-      const response = await fetch(`${base_path}/api/roles`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
-        },
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw errorData.detail;
-      }
-      const data = await response.json();
-      return Array.isArray(data) ? data : data.roles || []; // Adjust based on API
-    }
-  })
-
-
-  const { data: users = [] } = useQuery({
-    queryKey: ["users"],
-    queryFn: async () => {
-      const authToken = getAuthToken();
-      if (!authToken) throw new Error("No auth token found");
-      const response = await fetch(`${base_path}/api/users`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw errorData.detail;
-      }
-      const data = await response.json();
-      return data.map((user: NewUser) => ({
-        ...user,
-        peer_count: Number(user.peer_count),
-      }));
+    onError: (err) => {
+      toast.error(err.message);
     },
   });
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  const editMutation = useMutation({
+    mutationFn: async (formData: NewUser) => {
+      const token = getAuthToken();
+      const res = await fetch(`${base_path}/api/users/${selectedUser?.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.detail || "Failed to update user.");
+      }
+      return res.json();
+    },
+    onSuccess: async () => {
+      toast.success("User updated successfully");
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      setIsModalOpen(false);
+      setSelectedUser(null);
+      setIsEditing(false);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+  });
 
+  const { data: roleData = [] } = useQuery({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      const token = getAuthToken();
+      const res = await fetch(`${base_path}/api/roles`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to load roles");
+      return res.json();
+    },
+  });
 
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const token = getAuthToken();
+      const res = await fetch(`${base_path}/api/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to load users");
+      return res.json();
+    },
+  });
+
+  const columns = generateColumns(openEditModal);
 
   return (
-    <div className="container mx-auto ">
+    <div className="container mx-auto">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold mb-6">VPN Users</h1>
         <div className="flex gap-4">
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="mb-4">
-                Add User
-              </Button>
+              <Button variant="outline">{isEditing ? "Edit User" : "Add User"}</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New User</DialogTitle>
+                <DialogTitle>{isEditing ? "Edit User" : "Add User"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4 py-4">
                 <div>
-                  <label htmlFor="username" className="block text-sm font-medium">
-                    Username
-                  </label>
-                  <Input
-                    id="username"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    required
-                    className="mt-1"
-                  />
+                  <label className="block text-sm font-medium">Username</label>
+                  <Input name="username" value={formData.username} onChange={handleInputChange} required />
                 </div>
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium">
-                    Password
-                  </label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    required
-                    className="mt-1"
-                  />
+                  <label className="block text-sm font-medium">Password</label>
+                  <Input name="password" type="password" value={formData.password} onChange={handleInputChange} required={!isEditing} />
                 </div>
                 <div>
-                  <label htmlFor="role" className="block text-sm font-medium">
-                    Role
-                  </label>
-                  <Select
-                    value={formData.role_id}
-                    onValueChange={handleRoleChange}
-                  >
+                  <label className="block text-sm font-medium">Role</label>
+                  <Select value={formData.role_id} onValueChange={handleRoleChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a role" />
+                      <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                      {(Array.isArray(roleData) ? roleData : []).map((role: { id: string; role: string }) => (
-                        <SelectItem key={role.id} value={role.id}>
-                          {role.role}
-                        </SelectItem>
+                      {roleData.map((role: any) => (
+                        <SelectItem key={role.id} value={role.id}>{role.role}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" className="w-full" >
-                  Add User
+                <Button type="submit" className="w-full">
+                  {isEditing ? "Update" : "Create"}
                 </Button>
               </form>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" className="mb-4">
-            Download All
-          </Button>
+          <Button variant="outline">Download All</Button>
         </div>
       </div>
       <ClientTable columns={columns} data={users} />

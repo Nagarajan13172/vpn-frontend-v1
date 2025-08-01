@@ -1,6 +1,4 @@
-"use client";
-
-import { type ColumnDef } from "@tanstack/react-table";
+// src/pages/users/components/columns.tsx
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,18 +8,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
+import type { ColumnDef } from "@tanstack/react-table";
 import type { Role, User } from "@/types";
 
-
-export const columns: ColumnDef<User>[] = [
+export const generateColumns = (
+  onEdit: (user: User) => void
+): ColumnDef<User>[] => [
   {
     id: "select",
     header: ({ table }) => (
       <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
+        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
       />
@@ -39,10 +36,7 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "username",
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Username
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
@@ -53,17 +47,13 @@ export const columns: ColumnDef<User>[] = [
     header: "Role",
     cell: ({ row }) => {
       const role = row.getValue("role") as Role | undefined;
-      const roleName = role ? role.role : "Unknown";
-      return <div>{roleName}</div>;
+      return <div>{role?.role || "Unknown"}</div>;
     },
   },
   {
     accessorKey: "peer_count",
     header: "Peer Count",
-    cell: ({ row }) => {
-      const peerCount = Number(row.getValue("peer_count")); // Ensure number
-      return <div>{peerCount}</div>;
-    },
+    cell: ({ row }) => <div>{Number(row.getValue("peer_count"))}</div>,
   },
   {
     accessorKey: "created_at",
@@ -86,15 +76,10 @@ export const columns: ColumnDef<User>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => alert(`View user ${user.id}`)}>
-              View
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => alert(`Edit user ${user.id}`)}>
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => alert(`Delete user ${user.id}`)}>
-              Delete
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEdit(user)}>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEdit(user)}>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEdit(user)}>View</DropdownMenuItem>
+
           </DropdownMenuContent>
         </DropdownMenu>
       );
