@@ -27,10 +27,9 @@ interface NewUser {
   username: string;
   password: string;
   role_id: string;
+  peer_count?: number | string; // Optional, as it might not be required during creation
 }
-
 const UsersPage = () => {
-  const [data, setData] = useState<[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<NewUser>({
     username: "",
@@ -48,7 +47,7 @@ const UsersPage = () => {
   };
 
   const handleRoleChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, role: value }));
+    setFormData((prev) => ({ ...prev, role_id: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -93,7 +92,7 @@ const UsersPage = () => {
   //api for Users Role
 
   const { data: roleData } = useQuery({
-    queryKey: ['user'],
+    queryKey: ['roles'],
     queryFn: async () => {
       const authToken = getAuthToken();
       if (!authToken) throw new Error("No auth token found");
@@ -108,11 +107,37 @@ const UsersPage = () => {
         const errorData = await response.json();
         throw errorData.detail;
       }
-      return response.json();
+      const data = await response.json();
+      return Array.isArray(data) ? data : data.roles || []; // Adjust based on API
     }
   })
 
-  if(isLoading) {
+
+  const { data: users = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const authToken = getAuthToken();
+      if (!authToken) throw new Error("No auth token found");
+      const response = await fetch(`${base_path}/api/users`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw errorData.detail;
+      }
+      const data = await response.json();
+      return data.map((user: NewUser) => ({
+        ...user,
+        peer_count: Number(user.peer_count),
+      }));
+    },
+  });
+
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
@@ -174,7 +199,7 @@ const UsersPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {(Array.isArray(roleData) ? roleData : []).map((role: { id: string; role: string }) => (
-                        <SelectItem key={role.id} value={role.role}>
+                        <SelectItem key={role.id} value={role.id}>
                           {role.role}
                         </SelectItem>
                       ))}
@@ -192,7 +217,7 @@ const UsersPage = () => {
           </Button>
         </div>
       </div>
-      <ClientTable columns={columns} data={data} />
+      <ClientTable columns={columns} data={users} />
     </div>
   );
 };

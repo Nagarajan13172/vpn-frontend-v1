@@ -1,4 +1,3 @@
-
 "use client";
 
 import { type ColumnDef } from "@tanstack/react-table";
@@ -11,24 +10,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
+import type { Role, User } from "@/types";
 
-export type Role = {
-  id: string;
-  role: string;
-  created_at: string;
-  created_by: string | null;
-  updated_at: string;
-  updated_by: string | null;
-};
-
-export type User = {
-  id: string;
-  username: string;
-  role: Role;
-  role_id: string;
-  peer_count: number;
-  created_at: string;
-};
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -68,8 +51,8 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "role",
     header: "Role",
-    cell: ({ row, }) => {
-      const role = row.getValue("role") as Role;
+    cell: ({ row }) => {
+      const role = row.getValue("role") as Role | undefined;
       const roleName = role ? role.role : "Unknown";
       return <div>{roleName}</div>;
     },
@@ -78,7 +61,7 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: "peer_count",
     header: "Peer Count",
     cell: ({ row }) => {
-      const peerCount = row.getValue("peer_count") as number;
+      const peerCount = Number(row.getValue("peer_count")); // Ensure number
       return <div>{peerCount}</div>;
     },
   },

@@ -40,28 +40,6 @@ export function ClientTable({ columns, data }: ClientTableProps<User>) {
     const [rowSelection, setRowSelection] = useState({});
 
 
-    const { data: users = [] } = useQuery<User[]>({
-        queryKey: ['users'],
-        queryFn: async () => {
-            const authToken = getAuthToken();
-            if (!authToken) throw new Error("No auth token found");
-
-            const response = await fetch(`${base_path}/api/users`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authToken}`
-                }
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw errorData.detail;
-            }
-
-            return response.json();
-        }
-    });
-
     // api for users roles
     const { data: roleData } = useQuery({
         queryKey: ['user'],
@@ -104,15 +82,24 @@ export function ClientTable({ columns, data }: ClientTableProps<User>) {
             columnVisibility,
             rowSelection,
         },
+        initialState: {
+            pagination: {
+                pageSize: 10, // Explicitly set default page size
+            },
+        },
         meta: { roleData }
     });
+
+
+        console.log("Paginated rows:", table.getPaginationRowModel().rows.map(r => r.original));
+  
 
 
 
     return (
         <div className="space-y-4">
             {/* <DataTableFilter table={table} roleData={roleData} /> */}
-            <DataTable columns={columns} data={users} />
+            <DataTable  table={table}/>
             <DataTablePagination table={table} />
         </div>
     );
