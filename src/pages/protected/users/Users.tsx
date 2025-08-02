@@ -1,7 +1,7 @@
 // src/pages/users/index.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { generateColumns } from "./components/columns";
 import { ClientTable } from "./components/client-table";
 import {
@@ -24,6 +24,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAuthToken } from "@/api/getAuthToken";
 import { base_path } from "@/api/api";
 import { toast } from "sonner";
+import { useBreadcrumb } from "@/components/breadcrumb/BreadcrumbContext";
+import { BookA } from "lucide-react";
 
 interface NewUser {
   username: string;
@@ -39,6 +41,29 @@ interface User extends NewUser {
 }
 
 const UsersPage = () => {
+
+  {
+    /* BreadCrumbs */
+  }
+  const { setBreadcrumbs } = useBreadcrumb();
+  useEffect(() => {
+    setBreadcrumbs([
+      {
+        label: (
+          <div className="flex items-center gap-1">
+            <BookA className="h-4 w-4" />
+            Users
+          </div>
+        ),
+        href: "/users",
+      },
+    ]);
+
+    return () => {
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<NewUser>({
     username: "",
@@ -79,7 +104,7 @@ const UsersPage = () => {
     deleteMutation.mutate();
   };
 
-    const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditing) {
       editMutation.mutate(formData);

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Download, MoreVertical, Plus, Wifi, WifiOff, ArrowUp, ArrowDown } from 'lucide-react';
+import { Download, MoreVertical, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookA } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAuthToken } from '@/api/getAuthToken';
@@ -28,6 +28,7 @@ import { formatDataSize, formatTimeAgo, peerStatus } from '@/utils/Formater';
 import { useNavigate } from 'react-router';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useBreadcrumb } from '@/components/breadcrumb/BreadcrumbContext';
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend);
@@ -44,12 +45,12 @@ interface PeersData {
   username?: string;
 }
 
-const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: { 
-  peer: PeersData; 
-  onDelete: (peer: PeersData) => void; 
+const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: {
+  peer: PeersData;
+  onDelete: (peer: PeersData) => void;
   onEdit: (peer: PeersData) => void;
-  rxHistory: number[]; 
-  txHistory: number[] 
+  rxHistory: number[];
+  txHistory: number[]
 }) => {
   const labels = Array(rxHistory.length || 1).fill('');
   const rxChartData = {
@@ -105,6 +106,10 @@ const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: {
       y: { display: false },
     },
   };
+
+
+
+
 
   const navigate = useNavigate();
 
@@ -203,6 +208,29 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm }: { isOpen: boole
 };
 
 export default function PeersDashboard() {
+
+    {
+    /* BreadCrumbs */
+  }
+  const { setBreadcrumbs } = useBreadcrumb();
+  useEffect(() => {
+    setBreadcrumbs([
+      {
+        label: (
+          <div className="flex items-center gap-1">
+            <BookA className="h-4 w-4" />
+            Peers
+          </div>
+        ),
+        href: "/Peers",
+      },
+    ]);
+
+    return () => {
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs]);
+  
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedPeer, setSelectedPeer] = useState<PeersData | null>(null);
@@ -215,6 +243,8 @@ export default function PeersDashboard() {
   const [expandedUsernames, setExpandedUsernames] = useState<Set<string>>(new Set());
   const { user } = useUserStore();
   const queryClient = useQueryClient();
+
+
 
   const { data: peers = [], isLoading, error } = useQuery<PeersData[]>({
     queryKey: ['peers', user?.role],

@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router'
 import { ThemeProvider } from './components/ThemeProvider/theme-provider.tsx'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
+import { BreadcrumbProvider } from './components/breadcrumb/BreadcrumbContext.tsx'
 
 
 const queryClient = new QueryClient();
@@ -15,10 +16,12 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <BrowserRouter>
-          <App />
+          <BreadcrumbProvider>
+            <App />
+          </BreadcrumbProvider>
         </BrowserRouter>
       </ThemeProvider>
-      <Toaster richColors position='top-right'/>
+      <Toaster richColors position='top-right' />
     </QueryClientProvider>
   </StrictMode>,
 )

@@ -29,7 +29,7 @@ const items = [
   },
   {
     title: "Peer",
-    url: "/peer",
+    url: "/peers",
     icon: Inbox,
   },
   {

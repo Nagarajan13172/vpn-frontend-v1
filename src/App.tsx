@@ -22,7 +22,7 @@ function App() {
           <Route element={<SideMenuLayout />}>
             {/* Define your routes here */}
             <Route path="/" element={<Dashboard />} />
-            <Route path="/peer" element={<Peer />} />
+            <Route path="/peers" element={<Peer />} />
             <Route path="/peers/:id" element={<PeerDetails />} />
             <Route path="/users" element={<Users />} />
           </Route>

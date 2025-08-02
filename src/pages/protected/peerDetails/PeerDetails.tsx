@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Download, MoreVertical, QrCode, Share } from 'lucide-react';
+import { BookA, Download, MoreVertical, QrCode, Share } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAuthToken } from '@/api/getAuthToken';
@@ -15,10 +15,37 @@ import { PiHandshakeDuotone } from 'react-icons/pi';
 import DeleteConfirmationModal from '../peer/components/DeleteConfirmationModel';
 import { useUserStore } from '@/global/useUserStore';
 import { QRCodeCanvas } from 'qrcode.react';
+import { useBreadcrumb } from '@/components/breadcrumb/BreadcrumbContext';
 
 
 
 const PeerDetails = () => {
+
+    {
+        /* BreadCrumbs */
+    }
+    const { setBreadcrumbs } = useBreadcrumb();
+    useEffect(() => {
+        setBreadcrumbs([
+            {
+                label: (
+                    <div className="flex items-center gap-1">
+                        <BookA className="h-4 w-4" />
+                        Peers
+                    </div>
+                ),
+                href: "/Peers",
+            },
+            {
+                label: "Peer-details",
+            },
+        ]);
+
+        return () => {
+            setBreadcrumbs([]);
+        };
+    }, [setBreadcrumbs]);
+
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useUserStore()

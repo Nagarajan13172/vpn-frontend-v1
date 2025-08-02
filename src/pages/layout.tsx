@@ -8,6 +8,7 @@ import {
 import { Separator } from "@radix-ui/react-separator";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { ModeToggle } from "@/components/ThemeProvider/mode-toggle";
+import CustomBreadcrumb from "@/components/breadcrumb/CustomBreadcrumb";
 
 export default function SideMenuLayout() {
     const open = true;
@@ -27,6 +28,7 @@ export default function SideMenuLayout() {
                             className="bg-foreground/50 w-[1px] h-5"
                         />
                         {/* <CustomBreadcrumb /> */}
+                        <CustomBreadcrumb />
                     </div>
 
                     <div className="flex justify-end items-center gap-2 flex-1 px-4">
