@@ -2,10 +2,10 @@ import { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent,  DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Download, MoreVertical, QrCode, Share } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAuthToken } from '@/api/getAuthToken';
 import { base_path } from '@/api/api';
 import { toast } from 'sonner';
@@ -13,14 +13,19 @@ import { formatDataSize, formatTimeAgo, peerStatus } from '@/utils/Formater';
 
 import { PiHandshakeDuotone } from 'react-icons/pi';
 import DeleteConfirmationModal from '../peer/components/DeleteConfirmationModel';
+import { useUserStore } from '@/global/useUserStore';
+import { QRCodeCanvas } from 'qrcode.react';
+
+
 
 const PeerDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user } = useUserStore()
     const [copied, setCopied] = useState(false);
     const ipAddressRef = useRef<HTMLSpanElement>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
+    const queryClient = useQueryClient();
     const { data: peerData, isLoading } = useQuery({
         queryKey: ['peer', id],
         queryFn: async () => {
@@ -104,13 +109,20 @@ const PeerDetails = () => {
         }
     };
 
+
     const handleQRModal = () => {
         mutation.mutate(undefined, {
             onSuccess: (data) => {
                 toast.success('Peer Configuration Generated Successfully');
+
+                const formattedData = typeof data === 'string'
+                    ? data.replace(/^"|"$/g, '').replace(/\\n/g, '\n')
+                    : '';
+
                 const qrContent = (
-                    <div className="flex flex-col items-center justify-center p-4">
-                        <pre className="text-sm bg-gray-100 p-2 rounded">{data}</pre>
+                    <div className="flex flex-col items-center justify-center p-4 space-y-4">
+                        <QRCodeCanvas value={formattedData} size={256} />
+
                     </div>
                 );
                 setModalContent(qrContent);
@@ -122,22 +134,30 @@ const PeerDetails = () => {
         });
     };
 
+
+
     const handleDownload = () => {
         mutation.mutate(undefined, {
             onSuccess: (data) => {
-                toast.success('Downloaded Successfully');
-                const blob = new Blob([data], { type: 'text/plain' });
+                toast.success("Peer File downloaded successfully");
+                queryClient.invalidateQueries({ queryKey: ['peers'] });
+
+                const formattedData = typeof data === 'string'
+                    ? data.replace(/^"|"$/g, '').replace(/\\n/g, '\n')
+                    : '';
+
+                const blob = new Blob([formattedData], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `${peerData?.peer_name}.conf`;
+                a.download = `${user.username}_${peerData?.peer_name}.conf`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             },
             onError: (error) => {
-                toast.error(error.message);
+                toast.error(`Failed to download: ${error.message || error}`);
             },
         });
     };
