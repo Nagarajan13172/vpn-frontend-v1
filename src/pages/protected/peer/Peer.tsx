@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Download, MoreVertical, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookA } from 'lucide-react';
+import { Download, MoreVertical, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookA, PauseCircle, PlayCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAuthToken } from '@/api/getAuthToken';
@@ -45,10 +45,11 @@ interface PeersData {
   username?: string;
 }
 
-const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: {
+const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
   peer: PeersData;
   onDelete: (peer: PeersData) => void;
   onEdit: (peer: PeersData) => void;
+  onPause: (peer: PeersData) => void;
   rxHistory: number[];
   txHistory: number[]
 }) => {
@@ -135,12 +136,30 @@ const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/peers/${peer.id}`); }}>View Details</DropdownMenuItem>
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(peer); }}>Edit</DropdownMenuItem>
-                <DropdownMenuItem>Disconnect</DropdownMenuItem>
                 <DropdownMenuItem className="text-red-500" onClick={() => onDelete(peer)}>
                   Remove Peer
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <span
+              className="cursor-pointer flex items-center gap-1 text-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPause(peer);
+              }}
+            >
+              {peerStatus(Number(peer.latest_handshake)) ? (
+                <>
+                  <PauseCircle className="h-4 w-4" />
+                  Pause
+                </>
+              ) : (
+                <>
+                  <PlayCircle className="h-4 w-4" />
+                  Unpause
+                </>
+              )}
+            </span>
           </div>
         </div>
       </CardHeader>
@@ -209,7 +228,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm }: { isOpen: boole
 
 export default function PeersDashboard() {
 
-    {
+  {
     /* BreadCrumbs */
   }
   const { setBreadcrumbs } = useBreadcrumb();
@@ -230,7 +249,7 @@ export default function PeersDashboard() {
       setBreadcrumbs([]);
     };
   }, [setBreadcrumbs]);
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedPeer, setSelectedPeer] = useState<PeersData | null>(null);
@@ -297,6 +316,7 @@ export default function PeersDashboard() {
 
     return () => clearInterval(interval);
   }, [peers]);
+
 
   const addMutation = useMutation({
     mutationFn: async (formData: { peer_name: string; ip: string }) => {
@@ -377,6 +397,64 @@ export default function PeersDashboard() {
       toast.error(error.message || 'Failed to delete peer.');
     },
   });
+
+  const PeerPause = useMutation({
+    mutationFn: async (peerId: string) => {
+      const authToken = getAuthToken();
+      const response = await fetch(`${base_path}/api/peers/${peerId}/pause`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      })
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Failed to delete peer.');
+      }
+      return response.json();
+    },
+    onSuccess: async () => {
+      toast.success("Peer Paused Successfully")
+      await queryClient.invalidateQueries({ queryKey: ['peers'] });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to pause peer.');
+    }
+  })
+
+
+  const PeerUnPause = useMutation({
+    mutationFn: async (peerId: string) => {
+      const authToken = getAuthToken();
+      const response = await fetch(`${base_path}/api/peers/${peerId}/unpause`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      })
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Failed to delete peer.');
+      }
+      return response.json();
+    },
+    onSuccess: async () => {
+      toast.success("Peer UnPaused Successfully")
+      await queryClient.invalidateQueries({ queryKey: ['peers'] });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to Unpause peer.');
+    }
+  })
+
+  const handlePause = (peer: PeersData) => {
+    const isOnline = peerStatus(Number(peer.latest_handshake));
+    if (isOnline) {
+      PeerPause.mutate(peer.id);
+    } else {
+      PeerUnPause.mutate(peer.id);
+    }
+  };
+
+
+
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -491,6 +569,7 @@ export default function PeersDashboard() {
                           setIsDeleteModalOpen(true);
                         }}
                         onEdit={handleEdit}
+                        onPause={handlePause}
                         rxHistory={rxHistory[peer.id] || []}
                         txHistory={txHistory[peer.id] || []}
                       />
@@ -513,6 +592,7 @@ export default function PeersDashboard() {
                   setIsDeleteModalOpen(true);
                 }}
                 onEdit={handleEdit}
+                onPause={handlePause}
                 rxHistory={rxHistory[peer.id] || []}
                 txHistory={txHistory[peer.id] || []}
               />
