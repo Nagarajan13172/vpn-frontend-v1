@@ -18,6 +18,7 @@ import {
 } from "../ui/dropdown-menu";
 import { NavLink } from "react-router";
 import logo from "../../../public/logo.png";
+import { useUserStore } from "@/global/useUserStore";
 
 // Menu items.
 const items = [
@@ -31,10 +32,11 @@ const items = [
     url: "/peer",
     icon: Inbox,
   },
-   {
+  {
     title: "Users",
     url: "/users",
     icon: Inbox,
+    adminOnly: true, // Added flag to mark admin-only item
   },
   {
     title: "Settings",
@@ -49,8 +51,8 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const { user } = useUserStore();
   return (
-
     <Sidebar collapsible="icon" className="h-screen border-r bg-muted">
       <SidebarHeader>
         <SidebarMenuButton
@@ -62,7 +64,7 @@ export function AppSidebar() {
             <div className="flex aspect-square size-8 items-center justify-center rounded-md">
               <img src={logo} alt="YoungStorage Logo" className="h-6 w-6" />
             </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
+            <div className="grid flex-1 text-left text-sm leading-tight data-[state=collapsed]:hidden">
               <span className="truncate font-semibold">YoungStorage</span>
             </div>
           </div>
@@ -72,30 +74,34 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url}>
-                      {({ isActive }) => (
-                        <div
-                          className={`w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${isActive
-                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                              : "text-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                            }`}
-                        >
-                          <item.icon
-                            className={`h-4 w-4 ${isActive
-                                ? "text-sidebar-accent-foreground"
-                                : "text-foreground"
+              {items
+                .filter((item) => !item.adminOnly || (item.adminOnly && user?.role === "admin"))
+                .map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink to={item.url}>
+                        {({ isActive }) => (
+                          <div
+                            className={`w-full flex items-center gap-2 rounded-md py-2 text-sm font-medium transition-colors ${
+                              isActive
+                                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                : "text-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                            } data-[state=collapsed]:justify-center data-[state=collapsed]:px-2`}
+                          >
+                            <item.icon
+                              className={`h-5 w-5 shrink-0 ${
+                                isActive
+                                  ? "text-sidebar-accent-foreground"
+                                  : "text-foreground"
                               }`}
-                          />
-                          <span>{item.title}</span>
-                        </div>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                            />
+                            <span className="data-[state=collapsed]:hidden">{item.title}</span>
+                          </div>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -105,16 +111,16 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  <User2 className="h-4 w-4" />
-                  <span>Username</span>
-                  <ChevronUp className="ml-auto h-4 w-4" />
+                <SidebarMenuButton
+                  className="data-[state=collapsed]:justify-center data-[state=collapsed]:px-2"
+                >
+                  <User2 className="h-5 w-5 shrink-0" />
+                  <span className="data-[state=collapsed]:hidden">{user?.username || "Username"}</span>
+                  <ChevronUp className="ml-auto h-4 w-4 data-[state=collapsed]:hidden" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
-                <DropdownMenuItem>Account</DropdownMenuItem>
-                <DropdownMenuItem>Billing</DropdownMenuItem>
-                <DropdownMenuItem>Sign out</DropdownMenuItem>
+                <DropdownMenuItem>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>

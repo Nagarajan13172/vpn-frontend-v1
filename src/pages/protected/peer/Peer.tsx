@@ -26,6 +26,8 @@ import {
 } from 'chart.js';
 import { formatDataSize, formatTimeAgo, peerStatus } from '@/utils/Formater';
 import { useNavigate } from 'react-router';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend);
@@ -41,7 +43,6 @@ interface PeersData {
   user_id: string;
   username?: string;
 }
-
 
 const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: { 
   peer: PeersData; 
@@ -150,7 +151,7 @@ const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="w-full flex flex-col ">
+      <CardFooter className="w-full flex flex-col">
         <div className="w-full flex justify-between gap-4 text-sm">
           <div className="flex items-center gap-2">
             <ArrowUp className="h-4 w-4 text-blue-500" />
@@ -211,6 +212,7 @@ export default function PeersDashboard() {
   const [isAutoIP, setIsAutoIP] = useState(false);
   const [rxHistory, setRxHistory] = useState<{ [key: string]: number[] }>({});
   const [txHistory, setTxHistory] = useState<{ [key: string]: number[] }>({});
+  const [expandedUsernames, setExpandedUsernames] = useState<Set<string>>(new Set());
   const { user } = useUserStore();
   const queryClient = useQueryClient();
 
@@ -389,6 +391,22 @@ export default function PeersDashboard() {
     setSelectedPeer(null);
   };
 
+  const toggleUsername = (username: string) => {
+    setExpandedUsernames((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(username)) {
+        newSet.delete(username);
+      } else {
+        newSet.add(username);
+      }
+      return newSet;
+    });
+  };
+
+  const uniqueUsernames = user?.role === 'admin'
+    ? Array.from(new Set(peers.map((peer) => peer.username || peer.user_id)))
+    : [];
+
   return (
     <div className="max-w-7xl mx-auto">
       <header className="flex items-center justify-between mb-6">
@@ -417,21 +435,58 @@ export default function PeersDashboard() {
         <div className="text-center mt-10 text-red-500">{(error as Error).message}</div>
       ) : peers.length === 0 ? (
         <div className="text-center mt-10">No peers available.</div>
+      ) : user?.role === 'admin' ? (
+        <div className="p-2 w-full grid gap-4">
+          {uniqueUsernames.map((username) => (
+            <Collapsible key={username}>
+              <CollapsibleTrigger asChild>
+                <div className="flex items-center justify-between p-2 bg-muted rounded-t-lg">
+                  <h2 className="text-lg font-semibold">{username}</h2>
+                  <Button variant="ghost" size="sm" onClick={() => toggleUsername(username)}>
+                    {expandedUsernames.has(username) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {expandedUsernames.has(username) ? 'Hide Peers' : 'Show Peers'}
+                  </Button>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-4 p-2">
+                  {peers
+                    .filter((peer) => (peer.username || peer.user_id) === username)
+                    .map((peer) => (
+                      <PeerCard
+                        key={peer.id}
+                        peer={peer}
+                        onDelete={(p) => {
+                          setSelectedPeer(p);
+                          setIsDeleteModalOpen(true);
+                        }}
+                        onEdit={handleEdit}
+                        rxHistory={rxHistory[peer.id] || []}
+                        txHistory={txHistory[peer.id] || []}
+                      />
+                    ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ))}
+        </div>
       ) : (
         <div className="p-2 w-full grid lg:grid-cols-3 md:grid-cols-2 gap-4">
-          {peers.map((peer) => (
-            <PeerCard
-              key={peer.id}
-              peer={peer}
-              onDelete={(p) => {
-                setSelectedPeer(p);
-                setIsDeleteModalOpen(true);
-              }}
-              onEdit={handleEdit}
-              rxHistory={rxHistory[peer.id] || []}
-              txHistory={txHistory[peer.id] || []}
-            />
-          ))}
+          {peers
+            .filter((peer) => peer.user_id === user?.id)
+            .map((peer) => (
+              <PeerCard
+                key={peer.id}
+                peer={peer}
+                onDelete={(p) => {
+                  setSelectedPeer(p);
+                  setIsDeleteModalOpen(true);
+                }}
+                onEdit={handleEdit}
+                rxHistory={rxHistory[peer.id] || []}
+                txHistory={txHistory[peer.id] || []}
+              />
+            ))}
         </div>
       )}
       <Dialog open={isOpen} onOpenChange={handleCloseModal}>
