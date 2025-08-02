@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { generateColumns } from "./components/columns";
+import { useUserColumns } from "./components/columns";
 import { ClientTable } from "./components/client-table";
 import {
   Dialog,
@@ -26,19 +26,9 @@ import { base_path } from "@/api/api";
 import { toast } from "sonner";
 import { useBreadcrumb } from "@/components/breadcrumb/BreadcrumbContext";
 import { BookA } from "lucide-react";
+import type { NewUser, Role, User } from "@/types/user";
 
-interface NewUser {
-  username: string;
-  password: string;
-  role_id: string;
-  peer_count?: number | string;
-}
 
-interface User extends NewUser {
-  id: string;
-  role: { id: string; role: string };
-  created_at: string;
-}
 
 const UsersPage = () => {
 
@@ -181,7 +171,7 @@ const UsersPage = () => {
     onError: (err) => toast.error(`Error deleting user: ${err.message}`),
   });
 
-  const { data: roleData = [] } = useQuery({
+  const { data: roleData = [] } = useQuery<Role[]>({
     queryKey: ["roles"],
     queryFn: async () => {
       const token = getAuthToken();
@@ -205,7 +195,7 @@ const UsersPage = () => {
     },
   });
 
-  const columns = generateColumns(openEditModal, handleDeleteRequest);
+ const columns = useUserColumns(openEditModal, handleDeleteRequest);
 
   return (
     <div className="container mx-auto">
@@ -236,7 +226,7 @@ const UsersPage = () => {
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                      {roleData.map((role: any) => (
+                      {roleData.map((role) => (
                         <SelectItem key={role.id} value={role.id}>{role.role}</SelectItem>
                       ))}
                     </SelectContent>

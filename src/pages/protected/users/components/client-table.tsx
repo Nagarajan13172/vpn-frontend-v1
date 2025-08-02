@@ -17,20 +17,14 @@ import { DataTablePagination } from "./pagination";
 import { useQuery } from "@tanstack/react-query";
 import { getAuthToken } from "@/api/getAuthToken";
 import { base_path } from "@/api/api";
+import type { User } from "@/types/user";
 
 interface ClientTableProps<TData> {
     columns: ColumnDef<TData>[];
     data: TData[];
 }
 
-// Define user structure based on API response
-interface User {
-    id: string;
-    username: string;
-    role: string;
-    peer_count: string;
-    created_at: string;
-}
+
 
 
 export function ClientTable({ columns, data }: ClientTableProps<User>) {

@@ -9,15 +9,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Role, User } from "@/types";
+import type { Role } from "@/types";
 import { useNavigate } from "react-router";
+import type { User } from "@/types/user";
 
-export const generateColumns = (
+// Define the column configuration without using hooks directly
+const createColumnConfig = (
   onEdit: (user: User) => void,
-  onDelete: (user: User) => void
+  onDelete: (user: User) => void,
+  navigate: (path: string) => void // Pass navigate as a parameter
 ): ColumnDef<User>[] => {
-  const navigate = useNavigate();
-
   return [
     {
       id: "select",
@@ -84,7 +85,7 @@ export const generateColumns = (
               <DropdownMenuItem onClick={() => onEdit(user)}>Edit</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDelete(user)}>Delete</DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => navigate(`/users/${user.id}/${user.username}`)} 
+                onClick={() => navigate(`/users/${user.id}/${user.username}`)}
               >
                 View
               </DropdownMenuItem>
@@ -94,4 +95,13 @@ export const generateColumns = (
       },
     },
   ];
+};
+
+// Custom hook to provide columns with navigation
+export const useUserColumns = (
+  onEdit: (user: User) => void,
+  onDelete: (user: User) => void
+): ColumnDef<User>[] => {
+  const navigate = useNavigate();
+  return createColumnConfig(onEdit, onDelete, navigate);
 };
