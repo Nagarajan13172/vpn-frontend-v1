@@ -123,10 +123,20 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
             <CardDescription className="text-sm">{formatTimeAgo(peer.latest_handshake)}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={peerStatus(Number(peer.latest_handshake)) ? 'default' : 'destructive'} className="flex items-center gap-1.5">
-              {peerStatus(Number(peer.latest_handshake)) ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+            <Badge
+              className={`flex items-center gap-1.5 text-white ${peerStatus(Number(peer.latest_handshake))
+                  ? 'bg-green-600'
+                  : 'bg-red-600'
+                }`}
+            >
+              {peerStatus(Number(peer.latest_handshake)) ? (
+                <Wifi className="h-3.5 w-3.5 text-white" />
+              ) : (
+                <WifiOff className="h-3.5 w-3.5 text-white" />
+              )}
               {peerStatus(Number(peer.latest_handshake)) ? 'Online' : 'Offline'}
             </Badge>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -150,13 +160,13 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
             >
               {peerStatus(Number(peer.latest_handshake)) ? (
                 <>
-                  <PauseCircle className="h-4 w-4" />
-                  Pause
+                  <PauseCircle className="h-6 w-6" />
+              
                 </>
               ) : (
                 <>
-                  <PlayCircle className="h-4 w-4" />
-                  Unpause
+                  <PlayCircle className="h-6 w-6" />
+                  
                 </>
               )}
             </span>

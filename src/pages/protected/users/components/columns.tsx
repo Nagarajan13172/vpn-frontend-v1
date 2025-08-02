@@ -16,7 +16,7 @@ export const generateColumns = (
   onEdit: (user: User) => void,
   onDelete: (user: User) => void
 ): ColumnDef<User>[] => {
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
 
   return [
     {
@@ -84,7 +84,7 @@ export const generateColumns = (
               <DropdownMenuItem onClick={() => onEdit(user)}>Edit</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDelete(user)}>Delete</DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => navigate(`/users/${user.id}/${user.username}`)} // Navigate to UserPeerView
+                onClick={() => navigate(`/users/${user.id}/${user.username}`)} 
               >
                 View
               </DropdownMenuItem>
