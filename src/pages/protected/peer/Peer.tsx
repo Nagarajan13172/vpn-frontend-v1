@@ -125,8 +125,8 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
           <div className="flex items-center gap-2">
             <Badge
               className={`flex items-center gap-1.5 text-white ${peerStatus(Number(peer.latest_handshake))
-                  ? 'bg-green-600'
-                  : 'bg-red-600'
+                ? 'bg-green-600'
+                : 'bg-red-600'
                 }`}
             >
               {peerStatus(Number(peer.latest_handshake)) ? (
@@ -161,12 +161,12 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
               {peerStatus(Number(peer.latest_handshake)) ? (
                 <>
                   <PauseCircle className="h-6 w-6" />
-              
+
                 </>
               ) : (
                 <>
                   <PlayCircle className="h-6 w-6" />
-                  
+
                 </>
               )}
             </span>
@@ -462,10 +462,6 @@ export default function PeersDashboard() {
     }
   };
 
-
-
-
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!deviceName.trim()) {
@@ -570,6 +566,7 @@ export default function PeersDashboard() {
                 <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-4 p-2">
                   {peers
                     .filter((peer) => (peer.username || peer.user_id) === username)
+                    .sort((a, b) => Number(!peerStatus(Number(a.latest_handshake))) - Number(!peerStatus(Number(b.latest_handshake))))
                     .map((peer) => (
                       <PeerCard
                         key={peer.id}
@@ -593,6 +590,7 @@ export default function PeersDashboard() {
         <div className="p-2 w-full grid lg:grid-cols-3 md:grid-cols-2 gap-4">
           {peers
             .filter((peer) => peer.user_id === user?.id)
+            .sort((a, b) => Number(!peerStatus(Number(a.latest_handshake))) - Number(!peerStatus(Number(b.latest_handshake))))
             .map((peer) => (
               <PeerCard
                 key={peer.id}
