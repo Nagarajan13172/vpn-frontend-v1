@@ -7,6 +7,7 @@ import Login from './auth/Login';
 import AuthLayer from './auth/AuthLayer';
 import PeerDetails from './pages/protected/peerDetails/PeerDetails';
 import Users from './pages/protected/users/Users';
+import UserPeerView from './pages/protected/users/UserPeerView';
 
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
             <Route path="/peers" element={<Peer />} />
             <Route path="/peers/:id" element={<PeerDetails />} />
             <Route path="/users" element={<Users />} />
+            <Route path="/users/:id/:username" element={<UserPeerView />} />
           </Route>
         </Route>
       </Routes>

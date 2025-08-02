@@ -52,6 +52,7 @@ const items = [
 
 export function AppSidebar() {
   const { user } = useUserStore();
+  
   return (
     <Sidebar collapsible="icon" className="h-screen border-r bg-muted">
       <SidebarHeader>
@@ -84,7 +85,7 @@ export function AppSidebar() {
                           <div
                             className={`w-full flex items-center gap-2 rounded-md py-2 text-sm font-medium transition-colors ${
                               isActive
-                                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                ? "bg-sidebar-accent/50 text-sidebar-accent-foreground"
                                 : "text-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
                             } data-[state=collapsed]:justify-center data-[state=collapsed]:px-2`}
                           >
