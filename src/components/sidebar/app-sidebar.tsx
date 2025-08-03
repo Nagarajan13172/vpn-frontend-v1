@@ -1,131 +1,130 @@
-import { Calendar, ChevronUp, Home, Inbox, Search, User2 } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { NavLink } from "react-router";
-import logo from "../../../public/logo.png";
-import { useUserStore } from "@/global/useUserStore";
+import { useEffect, useState } from "react";
 
-// Menu items.
-const items = [
-  {
-    title: "Dashboard",
-    url: "/",
-    icon: Home,
-  },
-  {
-    title: "Peer",
-    url: "/peers",
-    icon: Inbox,
-  },
-  {
-    title: "Users",
-    url: "/users",
-    icon: Inbox,
-    adminOnly: true, // Added flag to mark admin-only item
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Calendar,
-  },
-  {
-    title: "Help",
-    url: "/help",
-    icon: Search,
-  },
-];
+import { Separator } from "../ui/separator";
+import { determineState } from "./menu-route";
+import { useTheme } from "../ThemeProvider/theme-provider";
+import { MenuActiveWrapper } from "./MenuActive";
+import logo from "../../../public/logo.png"
+import { NavUser } from "./nav-user";
 
+
+interface SidebarMenuItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+interface PathState {
+  currentState: string;
+  menuItems: SidebarMenuItem[];
+}
 export function AppSidebar() {
-  const { user } = useUserStore();
-  
+  const location = useLocation();
+  const pathname = location.pathname;
+  const { theme } = useTheme();
+
+  const [Pathstate, setPathState] = useState<PathState>(
+    () => determineState(pathname) ?? { currentState: "", menuItems: [] }
+  );
+
+  useEffect(() => {
+    setPathState(
+      determineState(pathname) ?? { currentState: "", menuItems: [] }
+    );
+  }, [pathname]);
+
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const navigate = useNavigate();
+  const NavigateRoute = (route: string) => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+    navigate(route);
+  };
+
   return (
-    <Sidebar collapsible="icon" className="h-screen border-r bg-muted">
+    <Sidebar collapsible="icon">
       <SidebarHeader>
-        <SidebarMenuButton
-          asChild
-          size="lg"
-          className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-transparent"
-        >
-          <div className="flex items-center gap-2">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-md">
-              <img src={logo} alt="YoungStorage Logo" className="h-6 w-6" />
+        <Link to="/dashboard">
+          <SidebarMenuButton
+            size="lg"
+            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-transparent"
+          >
+            <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar text-sidebar-primary-foreground">
+              {theme === "light" ? (
+                <img
+                  src={logo}
+                  alt="YSL-VPN"
+                  className="h-8 w-8"
+                />
+              ) : (
+                <img
+                  src={logo}
+                  alt="YSL-VPN"
+                  className="h-8 w-8"
+                />
+              )}
             </div>
-            <div className="grid flex-1 text-left text-sm leading-tight data-[state=collapsed]:hidden">
-              <span className="truncate font-semibold">YoungStorage</span>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate text-xl font-medium">YSL-VPN </span>
             </div>
-          </div>
-        </SidebarMenuButton>
+          </SidebarMenuButton>
+        </Link>
       </SidebarHeader>
-      <SidebarContent>
+
+      <div className="px-4">
+        <Separator />
+      </div>
+
+      <SidebarContent className="overflow-hidden">
         <SidebarGroup>
+          <SidebarGroupLabel>{Pathstate.currentState}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items
-                .filter((item) => !item.adminOnly || (item.adminOnly && user?.role === "admin"))
-                .map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink to={item.url}>
-                        {({ isActive }) => (
-                          <div
-                            className={`w-full flex items-center gap-2 rounded-md py-2 text-sm font-medium transition-colors ${
-                              isActive
-                                ? "bg-sidebar-accent/50 text-sidebar-accent-foreground"
-                                : "text-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                            } data-[state=collapsed]:justify-center data-[state=collapsed]:px-2`}
-                          >
-                            <item.icon
-                              className={`h-5 w-5 shrink-0 ${
-                                isActive
-                                  ? "text-sidebar-accent-foreground"
-                                  : "text-foreground"
-                              }`}
-                            />
-                            <span className="data-[state=collapsed]:hidden">{item.title}</span>
-                          </div>
-                        )}
-                      </NavLink>
-                    </SidebarMenuButton>
+              {Pathstate.menuItems.map((item) => {
+                const isActive =
+                  pathname.split("/").splice(0, 2).join("/") == item.href;
+                return (
+                  <SidebarMenuItem key={item.href} className="relative">
+                    <MenuActiveWrapper keyName={item.label} isActive={isActive}>
+                      <SidebarMenuButton
+                        tooltip={item.label}
+                        onClick={() => NavigateRoute(item.href)}
+                        className={`${
+                          isActive
+                            ? "hover:bg-transparent"
+                            : "hover:bg-sidebar-accent/30"
+                        }`}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    </MenuActiveWrapper>
                   </SidebarMenuItem>
-                ))}
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  className="data-[state=collapsed]:justify-center data-[state=collapsed]:px-2"
-                >
-                  <User2 className="h-5 w-5 shrink-0" />
-                  <span className="data-[state=collapsed]:hidden">{user?.username || "Username"}</span>
-                  <ChevronUp className="ml-auto h-4 w-4 data-[state=collapsed]:hidden" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
-                <DropdownMenuItem>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );
