@@ -1,5 +1,5 @@
 // src/pages/users/components/columns.tsx
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, Eye, MoreHorizontal, Pencil, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -82,13 +82,22 @@ const createColumnConfig = (
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(user)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDelete(user)}>Delete</DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => navigate(`/users/${user.id}/${user.username}`)}
               >
-                View
+                <>
+                 <Eye />
+                  View
+                </>
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(user)}>
+                <Pencil />
+                Edit
+                </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDelete(user)}>
+                <Trash2Icon />
+                Delete
+                </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );

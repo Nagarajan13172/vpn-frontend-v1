@@ -84,12 +84,6 @@ export function ClientTable({ columns, data }: ClientTableProps<User>) {
         meta: { roleData }
     });
 
-
-        console.log("Paginated rows:", table.getPaginationRowModel().rows.map(r => r.original));
-  
-
-
-
     return (
         <div className="space-y-4">
             {/* <DataTableFilter table={table} roleData={roleData} /> */}

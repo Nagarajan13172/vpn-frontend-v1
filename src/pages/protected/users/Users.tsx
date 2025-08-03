@@ -25,7 +25,7 @@ import { getAuthToken } from "@/api/getAuthToken";
 import { base_path } from "@/api/api";
 import { toast } from "sonner";
 import { useBreadcrumb } from "@/components/breadcrumb/BreadcrumbContext";
-import { BookA } from "lucide-react";
+import { BookA, Pencil, Plus, Trash2Icon } from "lucide-react";
 import type { NewUser, Role, User } from "@/types/user";
 
 
@@ -195,7 +195,7 @@ const UsersPage = () => {
     },
   });
 
- const columns = useUserColumns(openEditModal, handleDeleteRequest);
+  const columns = useUserColumns(openEditModal, handleDeleteRequest);
 
   return (
     <div className="container mx-auto">
@@ -204,7 +204,19 @@ const UsersPage = () => {
         <div className="flex gap-4">
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">{isEditing ? "Edit User" : "Add User"}</Button>
+              <Button variant="outline">
+                {isEditing ? (
+                  <>
+                    <Pencil className="w-4 h-4 " />
+                    Edit User
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 " />
+                    Add User
+                  </>
+                )}
+              </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -250,7 +262,10 @@ const UsersPage = () => {
                   Cancel
                 </Button>
                 <Button variant="destructive" onClick={confirmDelete}>
+                  <>
+                  <Trash2Icon />
                   Delete
+                  </>
                 </Button>
               </div>
             </DialogContent>
