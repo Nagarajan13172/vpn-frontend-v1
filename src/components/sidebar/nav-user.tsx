@@ -1,4 +1,4 @@
-import { Bell, ChevronsUpDown, LogOut, UserPen } from "lucide-react";
+import { Bell, ChevronsUpDown, LogOut as LogOutIcon, UserPen } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,13 +14,32 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useUserStore } from "@/global/useUserStore";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
-  const {user} = useUserStore()
+  const { user, resetUser } = useUserStore();
+  const navigate = useNavigate();
 
+  const handleLogout = () => {
+    // Clear all cookies
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+
+    // Optional: clear localStorage/sessionStorage
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Clear user store
+   resetUser()
+
+    // Redirect to home or login
+    navigate("/auth/login");
+  };
 
   return (
     <SidebarMenu>
@@ -62,20 +81,20 @@ export function NavUser() {
             <DropdownMenuGroup>
               <Link to="/profile">
                 <DropdownMenuItem>
-                  <UserPen />
+                  <UserPen className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
               </Link>
               <Link to="/notification">
                 <DropdownMenuItem>
-                  <Bell />
+                  <Bell className="mr-2 h-4 w-4" />
                   Notifications
                 </DropdownMenuItem>
               </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOut />
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOutIcon className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
