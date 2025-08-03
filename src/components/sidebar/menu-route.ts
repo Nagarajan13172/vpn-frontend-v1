@@ -16,13 +16,26 @@ export const mainItems = [
 ];
 
 
-export function determineState(path: string) {
-    for (const item of mainItems) {
-        if (path.startsWith(item.href)) {
-            return {
-                currentState: "platform",
-                menuItems: mainItems,
-            };
-        }
+export function determineState(path: string, user: { role: string }) {
+  const filteredItems = mainItems.filter((item) => {
+    if (item.label === "Users" && user.role !== "admin") {
+      return false;
     }
+    return true;
+  });
+
+  for (const item of filteredItems) {
+    if (path.startsWith(item.href)) {
+      return {
+        currentState: "platform",
+        menuItems: filteredItems,
+      };
+    }
+  }
+
+  // Fallback state if no path matches
+  return {
+    currentState: "platform",
+    menuItems: filteredItems,
+  };
 }

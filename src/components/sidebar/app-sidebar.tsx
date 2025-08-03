@@ -20,6 +20,7 @@ import { useTheme } from "../ThemeProvider/theme-provider";
 import { MenuActiveWrapper } from "./MenuActive";
 import logo from "../../../public/logo.png"
 import { NavUser } from "./nav-user";
+import { useUserStore } from "@/global/useUserStore";
 
 
 interface SidebarMenuItem {
@@ -36,16 +37,18 @@ export function AppSidebar() {
   const location = useLocation();
   const pathname = location.pathname;
   const { theme } = useTheme();
+  const { user } = useUserStore()
 
   const [Pathstate, setPathState] = useState<PathState>(
-    () => determineState(pathname) ?? { currentState: "", menuItems: [] }
+    () => determineState(pathname, user) ?? { currentState: "", menuItems: [] }
   );
 
   useEffect(() => {
     setPathState(
-      determineState(pathname) ?? { currentState: "", menuItems: [] }
+      determineState(pathname, user) ?? { currentState: "", menuItems: [] }
     );
-  }, [pathname]);
+  }, [pathname, user]);
+
 
   const { isMobile, setOpenMobile } = useSidebar();
 
@@ -105,11 +108,10 @@ export function AppSidebar() {
                       <SidebarMenuButton
                         tooltip={item.label}
                         onClick={() => NavigateRoute(item.href)}
-                        className={`${
-                          isActive
-                            ? "hover:bg-transparent"
-                            : "hover:bg-sidebar-accent/30"
-                        }`}
+                        className={`${isActive
+                          ? "hover:bg-transparent"
+                          : "hover:bg-sidebar-accent/30"
+                          }`}
                       >
                         <item.icon className="h-4 w-4" />
                         <span>{item.label}</span>
