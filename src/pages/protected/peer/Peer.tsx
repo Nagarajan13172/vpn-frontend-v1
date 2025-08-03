@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -13,27 +13,25 @@ import { getAuthToken } from '@/api/getAuthToken';
 import { base_path } from '@/api/api';
 import { useUserStore } from '@/global/useUserStore';
 import { toast } from 'sonner';
-
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip as ChartTooltip,
+  Legend,
+} from 'chart.js';
 import { formatDataSize, formatTimeAgo, peerStatus } from '@/utils/Formater';
 import { useNavigate } from 'react-router';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useBreadcrumb } from '@/components/breadcrumb/BreadcrumbContext';
 
-import { Bar } from 'react-chartjs-2'; // 👈 add this
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement, // 👈 register this
-  Title,
-  Tooltip as ChartTooltip,
-  Legend,
-} from 'chart.js';
-import type { ChartOptions, TooltipItem } from 'chart.js';
-
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, ChartTooltip, Legend);
+// Register ChartJS components
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend);
 
 interface PeersData {
   id: string;
@@ -53,90 +51,73 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
   onEdit: (peer: PeersData) => void;
   onPause: (peer: PeersData) => void;
   rxHistory: number[];
-  txHistory: number[];
+  txHistory: number[]
 }) => {
+ const labels = rxHistory.map((_, i) => i + 1); // Safer than fill('')
+
+const rxChartData = {
+  labels,
+  datasets: [
+    {
+      label: 'RX',
+      data: rxHistory.length ? rxHistory : Array(8).fill(0),
+      borderColor: 'rgb(54, 162, 235)',
+      backgroundColor: 'rgba(54, 162, 235, 0.2)',
+      borderWidth: 2,
+      fill: false,
+      tension: 0.4,
+      pointRadius: 0,
+    },
+  ],
+};
+
+const txChartData = {
+  labels,
+  datasets: [
+    {
+      label: 'TX',
+      data: txHistory.length ? txHistory : Array(8).fill(0),
+      borderColor: 'rgb(255, 99, 132)',
+      backgroundColor: 'rgba(255, 99, 132, 0.2)',
+      borderWidth: 2,
+      fill: false,
+      tension: 0.4,
+      pointRadius: 0,
+    },
+  ],
+};
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: {
+    duration: 100,
+    easing: 'linear',
+  },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      enabled: true,
+      mode: 'nearest',
+      intersect: false,
+      callbacks: {
+        label: (tooltipItem: import('chart.js').TooltipItem<'line'>) =>
+          `${tooltipItem.dataset.label}: ${formatDataSize(Number(tooltipItem.raw))}`,
+      },
+    },
+  },
+  scales: {
+    x: { display: false },
+    y: { display: false },
+  },
+};
+
+
+
+
+
+
   const navigate = useNavigate();
-
-  // Compute maximum value for scaling both charts
-  const maxVal = useMemo(() => {
-    const values = [...rxHistory, ...txHistory];
-    return Math.max(...values, 1); // Ensure non-zero max
-  }, [rxHistory, txHistory]);
-
-  // Generate labels for 10 time points
-  const labels = useMemo(() => Array.from({ length: 10 }, (_, i) => `${i + 1}`), []);
-
-  // RX (Upload) chart data
-  const rxChartData = useMemo(() => ({
-    labels,
-    datasets: [
-      {
-        label: 'Upload (RX)',
-        data: rxHistory.slice(-10), // Last 10 values
-        backgroundColor: 'rgba(54, 162, 235, 0.7)', // Blue
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-        borderRadius: 2,
-      },
-    ],
-  }), [rxHistory, labels]);
-
-  // TX (Download) chart data
-  const txChartData = useMemo(() => ({
-    labels,
-    datasets: [
-      {
-        label: 'Download (TX)',
-        data: txHistory.slice(-10), // Last 10 values
-        backgroundColor: 'rgba(255, 99, 132, 0.7)', // Red
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1,
-        borderRadius: 2,
-      },
-    ],
-  }), [txHistory, labels]);
-
-  const chartOptions: ChartOptions<'bar'> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: {
-      duration: 300,
-      easing: 'linear',
-    },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        enabled: true,
-        backgroundColor: '#1f2937',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: '#4b5563',
-        borderWidth: 1,
-        callbacks: {
-          label: (context: TooltipItem<'bar'>) => {
-            return `${context.dataset.data}: ${context.raw}`;
-          },
-        },
-      },
-    },
-    scales: {
-      y: {
-        display: false,
-        suggestedMax: maxVal * 1.1,
-        beginAtZero: true,
-      },
-      x: {
-        display: false,
-      },
-    },
-  };
-
-
-
-
-
-
-
 
   return (
     <Card className="flex flex-col">
@@ -228,10 +209,10 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
         </div>
         <div className="w-full flex justify-between mt-4">
           <div className="h-[50px] w-[100px]">
-            <Bar data={rxChartData} options={chartOptions} />
+            <Line data={rxChartData} options={chartOptions} />
           </div>
           <div className="h-[50px] w-[100px]">
-            <Bar data={txChartData} options={chartOptions} />
+            <Line data={txChartData} options={chartOptions} />
           </div>
         </div>
       </CardFooter>
@@ -298,7 +279,6 @@ export default function PeersDashboard() {
   const queryClient = useQueryClient();
 
 
-
   const { data: peers = [], isLoading, error } = useQuery<PeersData[]>({
     queryKey: ['peers', user?.role],
     queryFn: async () => {
@@ -332,8 +312,8 @@ export default function PeersDashboard() {
       setRxHistory((prev) => {
         const newHistory = { ...prev };
         peers.forEach((peer) => {
-          const history = prev[peer.id] || [];
-          newHistory[peer.id] = [...history.slice(-9), peer.rx]; // keep 10 bars
+          const currentHistory = newHistory[peer.id] || [];
+          newHistory[peer.id] = [...currentHistory.slice(-8), peer.rx];
         });
         return newHistory;
       });
@@ -341,8 +321,8 @@ export default function PeersDashboard() {
       setTxHistory((prev) => {
         const newHistory = { ...prev };
         peers.forEach((peer) => {
-          const history = prev[peer.id] || [];
-          newHistory[peer.id] = [...history.slice(-9), peer.tx];
+          const currentHistory = newHistory[peer.id] || [];
+          newHistory[peer.id] = [...currentHistory.slice(-8), peer.tx];
         });
         return newHistory;
       });
@@ -350,7 +330,6 @@ export default function PeersDashboard() {
 
     return () => clearInterval(interval);
   }, [peers]);
-
 
 
   const addMutation = useMutation({
