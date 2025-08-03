@@ -10,6 +10,7 @@ import { Activity, BookOpenCheck, Plane, Users } from 'lucide-react'; // Icons a
 import { useUserStore } from '@/global/useUserStore';
 import { useBreadcrumb } from '@/components/breadcrumb/BreadcrumbContext';
 import { useEffect } from 'react';
+import type { CurrentUser } from '@/types/user';
 
 const shimmerAnimation = {
   initial: { opacity: 0.4 },
@@ -79,9 +80,9 @@ export default function Dashboard() {
     enabled: !!user?.id,
   });
 
-  const { isLoading, data } = useQuery({
+  const { isLoading, data } = useQuery<CurrentUser>({
     queryKey: ['user'],
-    queryFn: async (): Promise<any> => {
+    queryFn: async (): Promise<CurrentUser> => {
       const authToken = getAuthToken();
       if (!authToken) throw new Error('No auth token found');
       const response = await fetch(`${base_path}/api/users/me`, {

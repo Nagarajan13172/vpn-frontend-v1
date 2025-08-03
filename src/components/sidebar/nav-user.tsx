@@ -35,7 +35,7 @@ export function NavUser() {
     sessionStorage.clear();
 
     // Clear user store
-   resetUser()
+    resetUser()
 
     // Redirect to home or login
     navigate("/auth/login");

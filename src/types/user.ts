@@ -1,6 +1,13 @@
 // src/types/user.ts
 
-// src/types/user.ts
+export interface CurrentUser {
+  id: string;
+  username: string;
+  email?: string;
+  role: string;
+}
+
+
 export interface Role {
     id: string;
     role: string;
