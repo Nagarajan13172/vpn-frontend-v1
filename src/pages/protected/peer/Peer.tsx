@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Download, MoreVertical, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookA, PauseCircle, PlayCircle } from 'lucide-react';
+import { Download, MoreVertical, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookOpenCheck, PauseCircle, PlayCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAuthToken } from '@/api/getAuthToken';
@@ -247,7 +247,7 @@ export default function PeersDashboard() {
       {
         label: (
           <div className="flex items-center gap-1">
-            <BookA className="h-4 w-4" />
+            <BookOpenCheck className="h-4 w-4" />
             Peers
           </div>
         ),

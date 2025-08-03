@@ -3,15 +3,15 @@ import { useParams, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { BookA, Download, MoreVertical, QrCode, Share } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { BookOpenCheck, Download, MoreVertical, QrCode, Share } from 'lucide-react';
+// import { Badge } from '@/components/ui/badge';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAuthToken } from '@/api/getAuthToken';
 import { base_path } from '@/api/api';
 import { toast } from 'sonner';
-import { formatDataSize, formatTimeAgo, peerStatus } from '@/utils/Formater';
+import { formatDataSize } from '@/utils/Formater';
 
-import { PiHandshakeDuotone } from 'react-icons/pi';
+// import { PiHandshakeDuotone } from 'react-icons/pi';
 import DeleteConfirmationModal from '../peer/components/DeleteConfirmationModel';
 import { useUserStore } from '@/global/useUserStore';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -30,7 +30,7 @@ const PeerDetails = () => {
             {
                 label: (
                     <div className="flex items-center gap-1">
-                        <BookA className="h-4 w-4" />
+                        <BookOpenCheck className="h-4 w-4" />
                         Peers
                     </div>
                 ),
@@ -242,7 +242,14 @@ const PeerDetails = () => {
     return (
         <div className="max-w-7xl mx-auto p-4">
             <header className="flex items-center justify-between mb-6">
+                <div className='flex gap-2'>
                 <h1 className="text-2xl font-bold">{peerData?.peer_name}</h1>
+                 {/* <Badge variant={peerStatus(peerData?.latest_handshake) ? 'default' : 'destructive'}  className="flex items-center gap-1.5 px-2 py-0.5 text-xs ">
+                    <PiHandshakeDuotone className="h-4 w-4" />
+                    {peerStatus(peerData?.latest_handshake) ? 'Online' : 'Offline'}
+                </Badge> */}
+                </div>
+
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={handleQRModal}>
                         <QrCode className="mr-2 h-4 w-4" /> QR Code
@@ -300,13 +307,13 @@ const PeerDetails = () => {
                     </CardContent>
                 </Card>
             </div>
-            <div className="mt-6">
+            {/* <div className="mt-6">
                 <Badge variant={peerStatus(peerData?.latest_handshake) ? 'default' : 'destructive'} className="flex items-center gap-1.5">
                     <PiHandshakeDuotone className="h-4 w-4" />
                     {peerStatus(peerData?.latest_handshake) ? 'Online' : 'Offline'}
                 </Badge>
                 <p className="text-sm mt-2">{formatTimeAgo(peerData?.latest_handshake)}</p>
-            </div>
+            </div> */}
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent>
                     <DialogHeader>

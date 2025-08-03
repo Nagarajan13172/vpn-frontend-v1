@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Download, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookA, MoreVertical } from "lucide-react";
+import { Download, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookOpenCheck, MoreVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -250,7 +250,7 @@ export default function UserPeerView() {
       {
         label: (
           <div className="flex items-center gap-1">
-            <BookA className="h-4 w-4" />
+            <BookOpenCheck className="h-4 w-4" />
             Users
           </div>
         ),

@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base_path } from '@/api/api';
 import { getAuthToken } from '@/api/getAuthToken';
 import { formatDataSize } from '@/utils/Formater';
-import { Activity, BookA, Plane, Users } from 'lucide-react'; // Icons as replacements
+import { Activity, BookOpenCheck, Plane, Users } from 'lucide-react'; // Icons as replacements
 import { useUserStore } from '@/global/useUserStore';
 import { useBreadcrumb } from '@/components/breadcrumb/BreadcrumbContext';
 import { useEffect } from 'react';
@@ -55,7 +55,7 @@ export default function Dashboard() {
       {
         label: (
           <div className="flex items-center gap-1">
-            <BookA className="h-4 w-4" />
+            <BookOpenCheck className="h-4 w-4" />
             Home
           </div>
         ),

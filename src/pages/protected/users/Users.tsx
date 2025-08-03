@@ -25,7 +25,7 @@ import { getAuthToken } from "@/api/getAuthToken";
 import { base_path } from "@/api/api";
 import { toast } from "sonner";
 import { useBreadcrumb } from "@/components/breadcrumb/BreadcrumbContext";
-import { BookA, Pencil, Plus, Trash2Icon } from "lucide-react";
+import { BookOpenCheck, Download, Pencil, Plus, Trash2Icon } from "lucide-react";
 import type { NewUser, Role, User } from "@/types/user";
 
 
@@ -41,7 +41,7 @@ const UsersPage = () => {
       {
         label: (
           <div className="flex items-center gap-1">
-            <BookA className="h-4 w-4" />
+            <BookOpenCheck className="h-4 w-4" />
             Users
           </div>
         ),
@@ -271,7 +271,10 @@ const UsersPage = () => {
             </DialogContent>
           </Dialog>
 
-          <Button variant="outline">Download All</Button>
+          <Button variant="outline">
+            <Download />
+            Download All
+            </Button>
         </div>
       </div>
       <ClientTable columns={columns} data={users} />
