@@ -45,11 +45,9 @@ const VpnLoginForm = () => {
       setLoading(false);
       toast.success('Login successful!');
       setCookie('authToken', data.access_token, {
-        expires: 1, // 1 day
         path: '/',
-        secure: true, // ✅ important in production
-        sameSite: 'Strict',
-      }); //
+        domain: window.location.hostname,
+      });
       navigate('/');
       console.log(data);
     }

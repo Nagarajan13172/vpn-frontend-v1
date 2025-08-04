@@ -161,8 +161,6 @@ const PeerDetails = () => {
         });
     };
 
-
-
     const handleDownload = () => {
         mutation.mutate(undefined, {
             onSuccess: (data) => {

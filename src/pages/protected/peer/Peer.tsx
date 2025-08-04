@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Download, MoreVertical, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookOpenCheck, PauseCircle, PlayCircle } from 'lucide-react';
+import { Download, MoreVertical, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookOpenCheck, PauseCircle, PlayCircle, Eye, SquarePen, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAuthToken } from '@/api/getAuthToken';
@@ -53,81 +53,76 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
   rxHistory: number[];
   txHistory: number[]
 }) => {
- const labels = rxHistory.map((_, i) => i + 1); // Safer than fill('')
+  const labels = rxHistory.map((_, i) => i + 1); // Safer than fill('')
 
-const rxChartData = {
-  labels,
-  datasets: [
-    {
-      label: 'RX',
-      data: rxHistory.length ? rxHistory : Array(8).fill(0),
-      borderColor: 'rgb(54, 162, 235)',
-      backgroundColor: 'rgba(54, 162, 235, 0.2)',
-      borderWidth: 2,
-      fill: false,
-      tension: 0.4,
-      pointRadius: 0,
+  const rxChartData = {
+    labels,
+    datasets: [
+      {
+        label: 'RX',
+        data: rxHistory.length ? rxHistory : Array(8).fill(0),
+        borderColor: 'rgb(54, 162, 235)',
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4,
+        pointRadius: 0,
+      },
+    ],
+  };
+
+  const txChartData = {
+    labels,
+    datasets: [
+      {
+        label: 'TX',
+        data: txHistory.length ? txHistory : Array(8).fill(0),
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4,
+        pointRadius: 0,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: {
+      duration: 1000,
+      easing: 'linear',
     },
-  ],
-};
-
-const txChartData = {
-  labels,
-  datasets: [
-    {
-      label: 'TX',
-      data: txHistory.length ? txHistory : Array(8).fill(0),
-      borderColor: 'rgb(255, 99, 132)',
-      backgroundColor: 'rgba(255, 99, 132, 0.2)',
-      borderWidth: 2,
-      fill: false,
-      tension: 0.4,
-      pointRadius: 0,
-    },
-  ],
-};
-
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  animation: {
-    duration: 100,
-    easing: 'linear',
-  },
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      enabled: true,
-      mode: 'nearest',
-      intersect: false,
-      callbacks: {
-        label: (tooltipItem: import('chart.js').TooltipItem<'line'>) =>
-          `${tooltipItem.dataset.label}: ${formatDataSize(Number(tooltipItem.raw))}`,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        enabled: true,
+        mode: 'nearest',
+        intersect: false,
+        callbacks: {
+          label: (tooltipItem: import('chart.js').TooltipItem<'line'>) =>
+            `${tooltipItem.dataset.label}: ${formatDataSize(Number(tooltipItem.raw))}`,
+        },
       },
     },
-  },
-  scales: {
-    x: { display: false },
-    y: { display: false },
-  },
-};
-
-
-
-
-
+    scales: {
+      x: { display: false },
+      y: { display: false },
+    },
+  };
 
   const navigate = useNavigate();
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col gap-0 ">
       <CardHeader>
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between pb-2 border-b-2">
           <div>
-            <CardTitle className="text-lg font-semibold">{peer.peer_name}</CardTitle>
-            <CardDescription className="text-sm">{formatTimeAgo(peer.latest_handshake)}</CardDescription>
+            <CardTitle className="text-sm font-semibold">{peer.peer_name}</CardTitle>
+            <CardDescription className="text-xs">{formatTimeAgo(peer.latest_handshake)}</CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ">
             <Badge
               className={`flex items-center gap-1.5 text-white ${peerStatus(Number(peer.latest_handshake))
                 ? 'bg-green-600'
@@ -139,25 +134,11 @@ const chartOptions = {
               ) : (
                 <WifiOff className="h-3.5 w-3.5 text-white" />
               )}
-              {peerStatus(Number(peer.latest_handshake)) ? 'Online' : 'Offline'}
+              {peerStatus(Number(peer.latest_handshake)) ? '' : ''}
             </Badge>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/peers/${peer.id}`); }}>View Details</DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(peer); }}>Edit</DropdownMenuItem>
-                <DropdownMenuItem className="text-red-500" onClick={() => onDelete(peer)}>
-                  Remove Peer
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
             <span
-              className="cursor-pointer flex items-center gap-1 text-sm"
+              className="cursor-pointer  text-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onPause(peer);
@@ -166,20 +147,41 @@ const chartOptions = {
               {peerStatus(Number(peer.latest_handshake)) ? (
                 <>
                   <PauseCircle className="h-6 w-6" />
-
                 </>
               ) : (
                 <>
                   <PlayCircle className="h-6 w-6" />
-
                 </>
               )}
             </span>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 border-2">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className='border-2'>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/peers/${peer.id}`); }}>
+                  <Eye />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(peer); }}>
+                  <SquarePen />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-red-500" onClick={() => onDelete(peer)}>
+                  <Trash2 />
+                  Delete Peer
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow">
-        <div className="space-y-2 text-sm">
+      <CardContent className="">
+        <div className=" text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">IP Address:</span>
             <span className="font-mono">{peer.assigned_ip}</span>
@@ -190,24 +192,24 @@ const chartOptions = {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="w-full flex flex-col">
-        <div className="w-full flex justify-between gap-4 text-sm">
+      <CardFooter className="flex flex-col border-2 m-2 rounded-xl">
+        <div className="w-full flex justify-between gap-4 text-sm p-2">
           <div className="flex items-center gap-2">
             <ArrowUp className="h-4 w-4 text-blue-500" />
             <div>
-              <div className="text-muted-foreground">Upload</div>
+              {/* <div className="text-muted-foreground">Upload</div> */}
               <div className="font-semibold">{formatDataSize(peer.rx)}</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <ArrowDown className="h-4 w-4 text-red-500" />
             <div>
-              <div className="text-muted-foreground">Download</div>
+              {/* <div className="text-muted-foreground">Download</div> */}
               <div className="font-semibold">{formatDataSize(peer.tx)}</div>
             </div>
           </div>
         </div>
-        <div className="w-full flex justify-between mt-4">
+        <div className="w-full flex justify-between">
           <div className="h-[50px] w-[100px]">
             <Line data={rxChartData} options={chartOptions} />
           </div>
@@ -526,7 +528,7 @@ export default function PeersDashboard() {
     : [];
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="mx-auto">
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold">Peers</h1>
         <div className="flex items-center gap-2">
@@ -567,7 +569,7 @@ export default function PeersDashboard() {
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-4 p-2">
+                <div className="w-full grid gap-4 bg-amber-300 p-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {peers
                     .filter((peer) => (peer.username || peer.user_id) === username)
                     .sort((a, b) => Number(!peerStatus(Number(a.latest_handshake))) - Number(!peerStatus(Number(b.latest_handshake))))
@@ -591,7 +593,7 @@ export default function PeersDashboard() {
           ))}
         </div>
       ) : (
-        <div className="p-2 w-full grid lg:grid-cols-3 md:grid-cols-2 gap-4">
+        <div className="w-full grid gap-4  p-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {peers
             .filter((peer) => peer.user_id === user?.id)
             .sort((a, b) => Number(!peerStatus(Number(a.latest_handshake))) - Number(!peerStatus(Number(b.latest_handshake))))

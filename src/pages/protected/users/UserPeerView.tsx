@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Download, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookOpenCheck, MoreVertical } from "lucide-react";
+import { Download, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookOpenCheck, MoreVertical, Eye, Trash2, SquarePen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -137,11 +137,18 @@ const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/peers/${peer.id}`); }}>View Details</DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(peer); }}>Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/peers/${peer.id}`); }}>
+                  <Eye />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(peer); }}>
+                  <SquarePen />
+                  Edit
+                </DropdownMenuItem>
                 <DropdownMenuItem>Disconnect</DropdownMenuItem>
                 <DropdownMenuItem className="text-red-500" onClick={() => onDelete(peer)}>
-                  Remove Peer
+                  <Trash2 />
+                  Delete Peer
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
