@@ -569,7 +569,7 @@ export default function PeersDashboard() {
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="w-full grid gap-4 bg-amber-300 p-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                <div className="w-full grid gap-4 p-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {peers
                     .filter((peer) => (peer.username || peer.user_id) === username)
                     .sort((a, b) => Number(!peerStatus(Number(a.latest_handshake))) - Number(!peerStatus(Number(b.latest_handshake))))
@@ -593,22 +593,22 @@ export default function PeersDashboard() {
           ))}
         </div>
       ) : (
-        <div className="w-full grid gap-4  p-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="w-full grid gap-4 p-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {peers
             .filter((peer) => peer.user_id === user?.id)
             .sort((a, b) => Number(!peerStatus(Number(a.latest_handshake))) - Number(!peerStatus(Number(b.latest_handshake))))
             .map((peer) => (
               <PeerCard
-                key={peer.id}
-                peer={peer}
-                onDelete={(p) => {
-                  setSelectedPeer(p);
-                  setIsDeleteModalOpen(true);
-                }}
-                onEdit={handleEdit}
-                onPause={handlePause}
-                rxHistory={rxHistory[peer.id] || []}
-                txHistory={txHistory[peer.id] || []}
+          key={peer.id}
+          peer={peer}
+          onDelete={(p) => {
+            setSelectedPeer(p);
+            setIsDeleteModalOpen(true);
+          }}
+          onEdit={handleEdit}
+          onPause={handlePause}
+          rxHistory={rxHistory[peer.id] || []}
+          txHistory={txHistory[peer.id] || []}
               />
             ))}
         </div>

@@ -8,7 +8,7 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: "light",
+  theme: "dark",
   setTheme: () => {},
 });
 
@@ -16,7 +16,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // ① lazy init from localStorage, default to "light"
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = window.localStorage.getItem("theme") as Theme | null;
-    return saved ?? "light";
+    return saved ?? "dark";
   });
 
   // ② whenever theme changes, apply it and persist

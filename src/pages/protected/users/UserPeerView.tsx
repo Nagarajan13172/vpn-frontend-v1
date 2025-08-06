@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Download, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookOpenCheck, MoreVertical, Eye, Trash2, SquarePen } from "lucide-react";
+import { Download, Plus, Wifi, WifiOff, ArrowUp, ArrowDown, BookOpenCheck, MoreVertical, Eye, Trash2, SquarePen, PauseCircle, PlayCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -54,10 +54,11 @@ interface PeersData {
   username?: string;
 }
 
-const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: {
+const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
   peer: PeersData;
   onDelete: (peer: PeersData) => void;
   onEdit: (peer: PeersData) => void;
+  onPause: (peer: PeersData) => void;
   rxHistory: number[];
   txHistory: number[];
 }) => {
@@ -118,25 +119,53 @@ const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: {
   };
 
   return (
-    <Card className="flex flex-col ">
+    <Card className="flex flex-col gap-0 ">
       <CardHeader>
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between pb-2 border-b-2">
           <div>
-            <CardTitle className="text-lg font-semibold">{peer.peer_name}</CardTitle>
-            <CardDescription className="text-sm">{formatTimeAgo(peer.latest_handshake)}</CardDescription>
+            <CardTitle className="text-sm font-semibold">{peer.peer_name}</CardTitle>
+            <CardDescription className="text-xs">{formatTimeAgo(peer.latest_handshake)}</CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant={peerStatus(Number(peer.latest_handshake)) ? "default" : "destructive"} className="flex items-center gap-1.5">
-              {peerStatus(Number(peer.latest_handshake)) ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-              {peerStatus(Number(peer.latest_handshake)) ? "Online" : "Offline"}
+          <div className="flex items-center gap-2 ">
+            <Badge
+              className={`flex items-center gap-1.5 text-white ${peerStatus(Number(peer.latest_handshake))
+                ? 'bg-green-600'
+                : 'bg-red-600'
+                }`}
+            >
+              {peerStatus(Number(peer.latest_handshake)) ? (
+                <Wifi className="h-3.5 w-3.5 text-white" />
+              ) : (
+                <WifiOff className="h-3.5 w-3.5 text-white" />
+              )}
+              {peerStatus(Number(peer.latest_handshake)) ? '' : ''}
             </Badge>
+
+            <span
+              className="cursor-pointer  text-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPause(peer);
+              }}
+            >
+              {peerStatus(Number(peer.latest_handshake)) ? (
+                <>
+                  <PauseCircle className="h-6 w-6" />
+                </>
+              ) : (
+                <>
+                  <PlayCircle className="h-6 w-6" />
+                </>
+              )}
+            </span>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8 border-2">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className='border-2'>
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/peers/${peer.id}`); }}>
                   <Eye />
                   View Details
@@ -145,63 +174,46 @@ const PeerCard = ({ peer, onDelete, onEdit, rxHistory, txHistory }: {
                   <SquarePen />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem>Disconnect</DropdownMenuItem>
                 <DropdownMenuItem className="text-red-500" onClick={() => onDelete(peer)}>
                   <Trash2 />
                   Delete Peer
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow">
-        <div className="space-y-2 text-sm">
+      <CardContent className="">
+        <div className=" text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">IP Address:</span>
-            <span
-              className="font-mono cursor-pointer hover:underline"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigator.clipboard.writeText(peer.assigned_ip).then(() => toast.success("IP Address copied to clipboard"));
-              }}
-            >
-              {peer.assigned_ip}
-            </span>
+            <span className="font-mono">{peer.assigned_ip}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Endpoint:</span>
-            <span
-              className="font-mono cursor-pointer hover:underline"
-              onClick={(e) => {
-                e.stopPropagation();
-                const endpointWithoutPort = peer.endpoint?.split(":")[0] || "(none)";
-                navigator.clipboard.writeText(endpointWithoutPort).then(() => toast.success("Endpoint copied to clipboard"));
-              }}
-            >
-              {peer.endpoint?.split(":")[0] || "(none)"}
-            </span>
+            <span className="font-mono">{peer.endpoint?.split(':')[0] || '(none)'}</span>
           </div>
         </div>
       </CardContent>
-      <CardFooter className="w-full flex flex-col">
-        <div className="w-full flex justify-between gap-4 text-sm">
+      <CardFooter className="flex flex-col border-2 m-2 rounded-xl">
+        <div className="w-full flex justify-between gap-4 text-sm p-2">
           <div className="flex items-center gap-2">
             <ArrowUp className="h-4 w-4 text-blue-500" />
             <div>
-              <div className="text-muted-foreground">Upload</div>
+              {/* <div className="text-muted-foreground">Upload</div> */}
               <div className="font-semibold">{formatDataSize(peer.rx)}</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <ArrowDown className="h-4 w-4 text-red-500" />
             <div>
-              <div className="text-muted-foreground">Download</div>
+              {/* <div className="text-muted-foreground">Download</div> */}
               <div className="font-semibold">{formatDataSize(peer.tx)}</div>
             </div>
           </div>
         </div>
-        <div className="w-full flex justify-between mt-4">
+        <div className="w-full flex justify-between">
           <div className="h-[50px] w-[100px]">
             <Line data={rxChartData} options={chartOptions} />
           </div>
@@ -411,6 +423,62 @@ export default function UserPeerView() {
     },
   });
 
+
+  const PeerPause = useMutation({
+    mutationFn: async (peerId: string) => {
+      const authToken = getAuthToken();
+      const response = await fetch(`${base_path}/api/peers/${peerId}/pause`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      })
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Failed to delete peer.');
+      }
+      return response.json();
+    },
+    onSuccess: async () => {
+      toast.success("Peer Paused Successfully")
+      await queryClient.invalidateQueries({ queryKey: ['peers'] });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to pause peer.');
+    }
+  })
+
+
+  const PeerUnPause = useMutation({
+    mutationFn: async (peerId: string) => {
+      const authToken = getAuthToken();
+      const response = await fetch(`${base_path}/api/peers/${peerId}/unpause`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      })
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Failed to delete peer.');
+      }
+      return response.json();
+    },
+    onSuccess: async () => {
+      toast.success("Peer UnPaused Successfully")
+      await queryClient.invalidateQueries({ queryKey: ['peers'] });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to Unpause peer.');
+    }
+  })
+
+  const handlePause = (peer: PeersData) => {
+    const isOnline = peerStatus(Number(peer.latest_handshake));
+    if (isOnline) {
+      PeerPause.mutate(peer.id);
+    } else {
+      PeerUnPause.mutate(peer.id);
+    }
+  };
+
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!deviceName.trim()) {
@@ -453,12 +521,12 @@ export default function UserPeerView() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
+    <div className=" mx-auto ">
       {/* Header */}
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold capitalize">{username}-Peers</h1>
         <div className="flex items-center gap-2">
-          <Dialog open={isOpen} onOpenChange={handleCloseModal}>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button
                 onClick={() => {
@@ -467,7 +535,6 @@ export default function UserPeerView() {
                   setDeviceName("");
                   setIpAddress("");
                   setIsAutoIP(false);
-                  setIsOpen(true);
                 }}
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -520,7 +587,7 @@ export default function UserPeerView() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={handleCloseModal}
+                    onClick={() => setIsOpen(false)}
                     disabled={addMutation.status === "pending" || updateMutation.status === "pending"}
                   >
                     Cancel
@@ -544,7 +611,7 @@ export default function UserPeerView() {
       ) : peers.length === 0 ? (
         <div className="text-center mt-10">No peers available for {username}.</div>
       ) : (
-        <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-4 p-2">
+        <div className="w-full grid gap-4 p-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {peers.map((peer) => (
             <PeerCard
               key={peer.id}
@@ -554,12 +621,15 @@ export default function UserPeerView() {
                 setIsDeleteModalOpen(true);
               }}
               onEdit={handleEdit}
+              onPause={handlePause}
               rxHistory={rxHistory[peer.id] || []}
               txHistory={txHistory[peer.id] || []}
             />
           ))}
         </div>
       )}
+
+
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
