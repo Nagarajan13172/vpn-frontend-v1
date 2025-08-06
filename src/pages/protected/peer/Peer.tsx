@@ -53,14 +53,16 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
   rxHistory: number[];
   txHistory: number[]
 }) => {
+  const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
   const labels = rxHistory.map((_, i) => i + 1); // Safer than fill('')
 
+  // Fallback data for graph if rxHistory or txHistory is empty
   const rxChartData = {
     labels,
     datasets: [
       {
         label: 'RX',
-        data: rxHistory.length ? rxHistory : Array(8).fill(0),
+        data: Object.values(rxHistory).length ? Object.values(rxHistory) : Array(10).fill(0), // Use 0 as fallback for initial data
         borderColor: 'rgb(54, 162, 235)',
         backgroundColor: 'rgba(54, 162, 235, 0.2)',
         borderWidth: 2,
@@ -71,12 +73,14 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
     ],
   };
 
+
+
   const txChartData = {
     labels,
     datasets: [
       {
         label: 'TX',
-        data: txHistory.length ? txHistory : Array(8).fill(0),
+        data: Object.values(txHistory).length ? Object.values(txHistory) : Array(10).fill(0), // Use 0 as fallback for initial data
         borderColor: 'rgb(255, 99, 132)',
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         borderWidth: 2,
@@ -91,7 +95,7 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
     responsive: true,
     maintainAspectRatio: false,
     animation: {
-      duration: 1000,
+      duration: 5000,
       easing: 'linear',
     },
     plugins: {
@@ -111,6 +115,7 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
       y: { display: false },
     },
   };
+
 
   const navigate = useNavigate();
 
@@ -141,7 +146,8 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
               className="cursor-pointer  text-sm"
               onClick={(e) => {
                 e.stopPropagation();
-                onPause(peer);
+                setIsPauseModalOpen(true);
+
               }}
             >
               {peerStatus(Number(peer.latest_handshake)) ? (
@@ -218,6 +224,15 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
           </div>
         </div>
       </CardFooter>
+      <PauseConfirmationModal
+        isOpen={isPauseModalOpen}
+        onClose={() => setIsPauseModalOpen(false)}
+        onConfirm={() => {
+          onPause(peer);
+          setIsPauseModalOpen(false);
+        }}
+        isOnline={peerStatus(Number(peer.latest_handshake))}
+      />
     </Card>
   );
 };
@@ -233,6 +248,36 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm }: { isOpen: boole
         <DialogFooter>
           <Button variant="destructive" onClick={onConfirm} disabled={false}>
             Delete
+          </Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const PauseConfirmationModal = ({ isOpen, onClose, onConfirm, isOnline }: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isOnline: boolean
+}) => {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Confirm {isOnline ? 'Pause' : 'Unpause'}</DialogTitle>
+        </DialogHeader>
+        <p className="py-4">Are you sure you want to {isOnline ? 'pause' : 'unpause'} this peer?</p>
+        <DialogFooter>
+          <Button
+            variant={isOnline ? "destructive" : "default"}
+            onClick={onConfirm}
+            disabled={false}
+          >
+            {isOnline ? 'Pause' : 'Unpause'}
           </Button>
           <Button variant="outline" onClick={onClose}>
             Cancel
@@ -274,9 +319,12 @@ export default function PeersDashboard() {
   const [deviceName, setDeviceName] = useState('');
   const [ipAddress, setIpAddress] = useState('');
   const [isAutoIP, setIsAutoIP] = useState(false);
-  const [rxHistory, setRxHistory] = useState<{ [key: string]: number[] }>({});
-  const [txHistory, setTxHistory] = useState<{ [key: string]: number[] }>({});
   const [expandedUsernames, setExpandedUsernames] = useState<Set<string>>(new Set());
+  // Add state for initial RX and TX values
+  const [initialRxHistory, setInitialRxHistory] = useState<{ [peerId: string]: number }>({});
+  const [initialTxHistory, setInitialTxHistory] = useState<{ [peerId: string]: number }>({});
+  const [rxHistory, setRxHistory] = useState<{ [peerId: string]: number[] }>({});
+  const [txHistory, setTxHistory] = useState<{ [peerId: string]: number[] }>({});
   const { user } = useUserStore();
   const queryClient = useQueryClient();
 
@@ -302,20 +350,36 @@ export default function PeersDashboard() {
       }
       return response.json();
     },
-    refetchInterval: 1000,
+    refetchInterval: 5000,
     retry: 3,
     enabled: !!user?.id,
   });
 
   useEffect(() => {
+    // Initialize history states when peers are available
+    if (peers.length) {
+      const newRxHistory: { [peerId: string]: number[] } = {};
+      const newTxHistory: { [peerId: string]: number[] } = {};
+
+      peers.forEach((peer) => {
+        // Initialize history with the current raw RX/TX values
+        newRxHistory[peer.id] = [(rxHistory[peer.id]?.length ? rxHistory[peer.id] : []).slice(-59), peer.rx].flat();
+        newTxHistory[peer.id] = [(txHistory[peer.id]?.length ? txHistory[peer.id] : []).slice(-59), peer.tx].flat();
+      });
+
+      setRxHistory(newRxHistory);
+      setTxHistory(newTxHistory);
+    }
+
+    // Set up interval for continuous updates
     const interval = setInterval(() => {
       if (!peers.length) return;
 
       setRxHistory((prev) => {
         const newHistory = { ...prev };
         peers.forEach((peer) => {
-          const currentHistory = newHistory[peer.id] || [];
-          newHistory[peer.id] = [...currentHistory.slice(-8), peer.rx];
+          // Append the raw RX value
+          newHistory[peer.id] = [...(newHistory[peer.id] || []).slice(-59), peer.rx];
         });
         return newHistory;
       });
@@ -323,8 +387,8 @@ export default function PeersDashboard() {
       setTxHistory((prev) => {
         const newHistory = { ...prev };
         peers.forEach((peer) => {
-          const currentHistory = newHistory[peer.id] || [];
-          newHistory[peer.id] = [...currentHistory.slice(-8), peer.tx];
+          // Append the raw TX value
+          newHistory[peer.id] = [...(newHistory[peer.id] || []).slice(-59), peer.tx];
         });
         return newHistory;
       });
@@ -572,7 +636,6 @@ export default function PeersDashboard() {
                 <div className="w-full grid gap-4 p-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {peers
                     .filter((peer) => (peer.username || peer.user_id) === username)
-                    .sort((a, b) => Number(!peerStatus(Number(a.latest_handshake))) - Number(!peerStatus(Number(b.latest_handshake))))
                     .map((peer) => (
                       <PeerCard
                         key={peer.id}
@@ -596,19 +659,18 @@ export default function PeersDashboard() {
         <div className="w-full grid gap-4 p-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {peers
             .filter((peer) => peer.user_id === user?.id)
-            .sort((a, b) => Number(!peerStatus(Number(a.latest_handshake))) - Number(!peerStatus(Number(b.latest_handshake))))
             .map((peer) => (
               <PeerCard
-          key={peer.id}
-          peer={peer}
-          onDelete={(p) => {
-            setSelectedPeer(p);
-            setIsDeleteModalOpen(true);
-          }}
-          onEdit={handleEdit}
-          onPause={handlePause}
-          rxHistory={rxHistory[peer.id] || []}
-          txHistory={txHistory[peer.id] || []}
+                key={peer.id}
+                peer={peer}
+                onDelete={(p) => {
+                  setSelectedPeer(p);
+                  setIsDeleteModalOpen(true);
+                }}
+                onEdit={handleEdit}
+                onPause={handlePause}
+                rxHistory={rxHistory[peer.id] || []}
+                txHistory={txHistory[peer.id] || []}
               />
             ))}
         </div>
