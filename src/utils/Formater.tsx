@@ -27,3 +27,18 @@ export const peerStatus = (timestamp: number) => {
 
     return secondsPast <= 120; // 120 seconds = 2 minutes
 };
+
+
+export function formatData(bytes: number, unit: 'KB' | 'MB' | 'GB' = 'MB'): string {
+  if (bytes === 0) return '0 ' + unit;
+
+  const units = {
+    KB: 1024,
+    MB: 1024 * 1024,
+    GB: 1024 * 1024 * 1024,
+  };
+
+  const value = bytes / units[unit];
+  return `${value.toFixed(2)} ${unit}`;
+}
+

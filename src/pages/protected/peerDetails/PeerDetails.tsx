@@ -1,11 +1,13 @@
-"use client"
+
+"use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { BookOpenCheck, Download, MoreVertical, QrCode, Share, Server, Upload, DownloadCloud, Layers, BarChart } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'; // Import Sheet components
+import { BookOpenCheck, Download, MoreVertical, QrCode, Share, Server, Upload, DownloadCloud, Layers, BarChart, Globe } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAuthToken } from '@/api/getAuthToken';
 import { base_path } from '@/api/api';
@@ -28,6 +30,8 @@ import {
     Legend,
     type ChartOptions,
 } from 'chart.js';
+import { Input } from '@/components/ui/input'; // Import Input for the form
+import { Label } from '@/components/ui/label'; // Import Label for the form
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend);
 
@@ -41,6 +45,8 @@ const PeerDetails = () => {
     const ipAddressRef = useRef<HTMLSpanElement>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSheetOpen, setIsSheetOpen] = useState(false); // State for sidesheet
+    const [dnsInput, setDnsInput] = useState(''); // State for DNS input
     const [modalContent, setModalContent] = useState<React.ReactNode>(null);
     const queryClient = useQueryClient();
     const [rxHistory, setRxHistory] = useState<number[]>([]);
@@ -115,6 +121,34 @@ const PeerDetails = () => {
                 throw new Error(data.detail || 'Failed to generate peer config.');
             }
             return response.text();
+        },
+    });
+
+    const addDnsMutation = useMutation({
+        mutationFn: async (dns: string) => {
+            const authToken = getAuthToken();
+            const response = await fetch(`${base_path}/api/peers/${id}/dns`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${authToken}`,
+                },
+                body: JSON.stringify({ dns }),
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.detail || 'Failed to add DNS.');
+            }
+            return response.json();
+        },
+        onSuccess: () => {
+            toast.success('DNS added successfully!');
+            setIsSheetOpen(false); // Close the sidesheet on success
+            setDnsInput(''); // Clear the input
+            queryClient.invalidateQueries({ queryKey: ['peer', id] }); // Refresh peer data
+        },
+        onError: (error) => {
+            toast.error(error.message);
         },
     });
 
@@ -247,6 +281,14 @@ const PeerDetails = () => {
         setIsDeleteModalOpen(false);
     };
 
+    const handleAddDns = () => {
+        if (!dnsInput.trim()) {
+            toast.error('Please enter a valid DNS address');
+            return;
+        }
+        addDnsMutation.mutate(dnsInput);
+    };
+
     const labels = useMemo(() => Array.from({ length: 9 }, (_, i) => `${i + 1}s`), []);
     const maxVal = useMemo(() => {
         const values = [...rxHistory, ...txHistory].filter((v) => !isNaN(v) && v > 0);
@@ -258,7 +300,7 @@ const PeerDetails = () => {
         maintainAspectRatio: false,
         animation: {
             duration: 1000,
-            easing: "easeOutCubic", // ✅ Now TypeScript knows it's valid
+            easing: "easeOutCubic",
         },
         plugins: {
             legend: {
@@ -297,7 +339,6 @@ const PeerDetails = () => {
                 ticks: {
                     color: theme === "dark" ? "#9ca3af" : "#6b7280",
                     callback: function (tickValue: string | number) {
-                        // Only format if tickValue is a number
                         return typeof tickValue === "number" ? formatDataSize(tickValue) : tickValue;
                     },
                 },
@@ -306,7 +347,6 @@ const PeerDetails = () => {
             },
         },
     }), [maxVal, theme]);
-
 
     const rxChartData = {
         labels,
@@ -377,19 +417,56 @@ const PeerDetails = () => {
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{peerData?.peer_name}</h1>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm" className="flex items-center gap-2 border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" onClick={handleQRModal}>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                        onClick={() => setIsSheetOpen(true)} // Open sidesheet on click
+                    >
+                        <Globe className='h-4 w-4 text-blue-500' />
+                        Add DNS
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                        onClick={handleQRModal}
+                    >
                         <QrCode className="h-4 w-4 text-blue-500" /> QR Code
                     </Button>
-                    <Button variant="outline" size="sm" className="flex items-center gap-2 border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" onClick={() => { setModalContent('Share Content'); setIsModalOpen(true); }}>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                        onClick={() => {
+                            setModalContent('Share Content');
+                            setIsModalOpen(true);
+                        }}
+                    >
                         <Share className="h-4 w-4 text-blue-500" /> Share
                     </Button>
-                    <Button variant="outline" size="sm" className="flex items-center gap-2 border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" onClick={handleDownload}>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                        onClick={handleDownload}
+                    >
                         <Download className="h-4 w-4 text-blue-500" /> Download
                     </Button>
-                    <Button variant="outline" size="sm" className="flex items-center gap-2 border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" onClick={handleConfigModal}>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                        onClick={handleConfigModal}
+                    >
                         <MoreVertical className="h-4 w-4 text-blue-500" /> Config
                     </Button>
-                    <Button variant="destructive" size="sm" className="flex items-center gap-2 bg-red-600 hover:bg-red-700 transition-colors" onClick={() => setIsDeleteModalOpen(true)}>
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 transition-colors"
+                        onClick={() => setIsDeleteModalOpen(true)}
+                    >
                         Delete
                     </Button>
                 </div>
@@ -479,6 +556,38 @@ const PeerDetails = () => {
                     </CardContent>
                 </Card>
             </div>
+            {/* Sidesheet for Add DNS */}
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                <SheetContent className="bg-white dark:bg-gray-800 min-w-3xl">
+                    <SheetHeader>
+                        <SheetTitle className="text-gray-900 dark:text-gray-100">Add DNS</SheetTitle>
+                    </SheetHeader>
+                    <div className="p-6">
+                        <div className="space-y-4">
+                            <div>
+                                <Label htmlFor="dns-input" className="text-gray-900 dark:text-gray-100">DNS Address</Label>
+                                <Input
+                                    id="dns-input"
+                                    value={dnsInput}
+                                    onChange={(e) => setDnsInput(e.target.value)}
+                                    placeholder="e.g., 8.8.8.8"
+                                    className="mt-1"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <SheetFooter>
+                        <Button
+                            variant="default"
+                            onClick={handleAddDns}
+                        >
+                        </Button>
+                        <SheetClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </SheetClose>
+                    </SheetFooter>
+                </SheetContent>
+            </Sheet>
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent className="bg-white dark:bg-gray-800 rounded-xl">
                     <DialogHeader>

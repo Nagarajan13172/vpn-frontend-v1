@@ -128,7 +128,7 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
   const navigate = useNavigate();
 
   return (
-    <Card className="flex flex-col gap-0 ">
+    <Card className="flex flex-col gap-0" onDoubleClick={() => navigate(`/peers/${peer.id}`)}>
       <CardHeader>
         <div className="flex items-start justify-between pb-2 border-b-2">
           <div>
@@ -151,21 +151,16 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
             </Badge>
 
             <span
-              className="cursor-pointer  text-sm"
+              className="cursor-pointer text-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsPauseModalOpen(true);
-
               }}
             >
               {peerStatus(Number(peer.latest_handshake)) ? (
-                <>
-                  <PauseCircle className="h-6 w-6" />
-                </>
+                <PauseCircle className="h-6 w-6" />
               ) : (
-                <>
-                  <PlayCircle className="h-6 w-6" />
-                </>
+                <PlayCircle className="h-6 w-6" />
               )}
             </span>
 
@@ -175,7 +170,7 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className='border-2'>
+              <DropdownMenuContent align="end" className="border-2">
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/peers/${peer.id}`); }}>
                   <Eye />
                   View Details
@@ -190,19 +185,47 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
           </div>
         </div>
       </CardHeader>
       <CardContent className="">
-        <div className=" text-sm">
+        <div className="text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">IP Address:</span>
-            <span className="font-mono">{peer.assigned_ip}</span>
+            <span
+              className="font-mono cursor-pointer hover:text-blue-500 dark:hover:text-blue-400"
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(peer.assigned_ip)
+                  .then(() => {
+                    toast.success('IP address copied to clipboard');
+                  })
+                  .catch(() => {
+                    toast.error('Failed to copy IP address');
+                  });
+              }}
+            >
+              {peer.assigned_ip}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Endpoint:</span>
-            <span className="font-mono">{peer.endpoint?.split(':')[0] || '(none)'}</span>
+            <span
+              className="font-mono cursor-pointer hover:text-blue-500 dark:hover:text-blue-400"
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                const endpointText = peer.endpoint?.split(':')[0] || '(none)';
+                navigator.clipboard.writeText(endpointText)
+                  .then(() => {
+                    toast.success('Endpoint copied to clipboard');
+                  })
+                  .catch(() => {
+                    toast.error('Failed to copy endpoint');
+                  });
+              }}
+            >
+              {peer.endpoint?.split(':')[0] || '(none)'}
+            </span>
           </div>
         </div>
       </CardContent>
@@ -211,14 +234,12 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
           <div className="flex items-center gap-2">
             <ArrowUp className="h-4 w-4 text-blue-500" />
             <div>
-              {/* <div className="text-muted-foreground">Upload</div> */}
               <div className="font-semibold">{formatDataSize(peer.rx)}</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <ArrowDown className="h-4 w-4 text-red-500" />
             <div>
-              {/* <div className="text-muted-foreground">Download</div> */}
               <div className="font-semibold">{formatDataSize(peer.tx)}</div>
             </div>
           </div>

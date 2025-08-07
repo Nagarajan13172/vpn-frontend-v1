@@ -1,13 +1,15 @@
+
 "use client"
 
 import { useTheme } from "next-themes"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select" // Import Select components
 import { motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { base_path } from "@/api/api"
 import { getAuthToken } from "@/api/getAuthToken"
-import { formatDataSize } from "@/utils/Formater"
+import { formatData } from "@/utils/Formater"
 import { Activity, BookOpenCheck, Plane, Users } from "lucide-react"
 import { useUserStore } from "@/global/useUserStore"
 import { useBreadcrumb } from "@/components/breadcrumb/BreadcrumbContext"
@@ -68,6 +70,7 @@ export default function Dashboard() {
   const [peers, setPeers] = useState<any[]>([])
   const [rxHistory, setRxHistory] = useState<{ [peerId: string]: number[] }>({})
   const [txHistory, setTxHistory] = useState<{ [peerId: string]: number[] }>({})
+  const [selectedUnit, setSelectedUnit] = useState<'KB' | 'MB' | 'GB'>('MB') // State for unit selection
 
   useEffect(() => {
     setBreadcrumbs([
@@ -206,7 +209,7 @@ export default function Dashboard() {
     maintainAspectRatio: false,
     animation: {
       duration: 1000,
-      easing: "easeOutCubic", // ✅ now recognized by TypeScript
+      easing: "easeOutCubic",
     },
     plugins: {
       legend: {
@@ -228,7 +231,7 @@ export default function Dashboard() {
           label: (ctx) => {
             const val = Number(ctx.raw) || 0;
             const label = ctx.dataset.label;
-            return `${label}: ${formatDataSize(val)}`;
+            return `${label}: ${formatData(val, selectedUnit)}`;
           },
         },
       },
@@ -249,15 +252,14 @@ export default function Dashboard() {
         ticks: {
           color: theme === "dark" ? "#9ca3af" : "#6b7280",
           callback: function (this, tickValue: string | number) {
-            // Only format if tickValue is a number
-            return typeof tickValue === "number" ? formatDataSize(tickValue) : tickValue;
+            return typeof tickValue === "number" ? formatData(tickValue, selectedUnit) : tickValue;
           },
         },
         suggestedMax: maxVal * 1.2,
         beginAtZero: true,
       },
     },
-  }), [maxVal, theme])
+  }), [maxVal, theme, selectedUnit])
 
   const rxChartData = {
     labels,
@@ -325,6 +327,7 @@ export default function Dashboard() {
       icon: <Users className="text-blue-500" />,
       borderColor: "border-blue-500",
       iconBgColor: "bg-blue-100 dark:bg-blue-900/50",
+      showDropdown: false, // No dropdown for Connected Peers
     },
     {
       title: "Total Usage",
@@ -332,6 +335,7 @@ export default function Dashboard() {
       icon: <Activity className="text-purple-500" />,
       borderColor: "border-purple-500",
       iconBgColor: "bg-purple-100 dark:bg-purple-900/50",
+      showDropdown: true, // Show dropdown for Total Usage
     },
     {
       title: "Total Received",
@@ -339,6 +343,7 @@ export default function Dashboard() {
       icon: <Plane className="text-green-500 -rotate-45" />,
       borderColor: "border-green-500",
       iconBgColor: "bg-green-100 dark:bg-green-900/50",
+      showDropdown: true, // Show dropdown for Total Received
     },
     {
       title: "Total Sent",
@@ -346,6 +351,7 @@ export default function Dashboard() {
       icon: <Plane className="text-red-500 rotate-45" />,
       borderColor: "border-red-500",
       iconBgColor: "bg-red-100 dark:bg-red-900/50",
+      showDropdown: true, // Show dropdown for Total Sent
     },
   ]
 
@@ -388,14 +394,33 @@ export default function Dashboard() {
             <CardContent className="flex items-center justify-between p-6">
               <div>
                 <p className="text-sm text-muted-foreground">{item.title}</p>
-                <div className="text-2xl font-bold mt-1 text-foreground">
+                <div className="flex items-center gap-2 text-2xl font-bold mt-1 text-foreground">
                   {isLoading ? (
                     <Skeleton className="h-8 w-24" />
                   ) : (
                     <>
-                      {item.title === "Connected Peers"
-                        ? `${item.value ?? 0} / ${item.total ?? 0}`
-                        : formatDataSize(item.value || 0)}
+                      {item.title === "Connected Peers" ? (
+                        `${item.value ?? 0} / ${item.total ?? 0}`
+                      ) : (
+                        <>
+                          {formatData(item.value || 0, selectedUnit)}
+                          {item.showDropdown && (
+                            <Select
+                              value={selectedUnit}
+                              onValueChange={(value: 'KB' | 'MB' | 'GB') => setSelectedUnit(value)}
+                            >
+                              <SelectTrigger className="w-[80px]">
+                                <SelectValue placeholder="Unit" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="KB">KB</SelectItem>
+                                <SelectItem value="MB">MB</SelectItem>
+                                <SelectItem value="GB">GB</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </>
+                      )}
                     </>
                   )}
                 </div>
