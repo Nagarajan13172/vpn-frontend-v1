@@ -581,6 +581,7 @@ const PeerDetails = () => {
                             variant="default"
                             onClick={handleAddDns}
                         >
+                            ADD DNS
                         </Button>
                         <SheetClose asChild>
                             <Button variant="outline">Cancel</Button>

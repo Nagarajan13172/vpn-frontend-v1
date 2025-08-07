@@ -394,7 +394,7 @@ export default function Dashboard() {
             <CardContent className="flex items-center justify-between p-6">
               <div>
                 <p className="text-sm text-muted-foreground">{item.title}</p>
-                <div className="flex items-center gap-2 text-2xl font-bold mt-1 text-foreground">
+                <div className="flex items-center gap-2  font-bold mt-1 text-foreground">
                   {isLoading ? (
                     <Skeleton className="h-8 w-24" />
                   ) : (
@@ -409,7 +409,7 @@ export default function Dashboard() {
                               value={selectedUnit}
                               onValueChange={(value: 'KB' | 'MB' | 'GB') => setSelectedUnit(value)}
                             >
-                              <SelectTrigger className="w-[80px]">
+                              <SelectTrigger className="">
                                 <SelectValue placeholder="Unit" />
                               </SelectTrigger>
                               <SelectContent>
