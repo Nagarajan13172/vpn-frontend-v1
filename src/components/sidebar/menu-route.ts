@@ -12,7 +12,6 @@ export const mainItems = [
     { label: "Users", href: "/users", icon: UserPlus, },
     { label: "Settings", href: "/settings", icon: Settings },
     { label: "Help", href: "/help", icon: Presentation },
-
 ];
 
 

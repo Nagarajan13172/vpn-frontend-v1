@@ -23,6 +23,7 @@ import {
   Title,
   Tooltip as ChartTooltip,
   Legend,
+  type ChartOptions,
 } from 'chart.js';
 import { formatDataSize, formatTimeAgo, peerStatus } from '@/utils/Formater';
 import { useNavigate } from 'react-router';
@@ -91,30 +92,37 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
     ],
   };
 
-  const chartOptions = {
+  const chartOptions: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
     animation: {
       duration: 5000,
-      easing: 'linear',
+      easing: 'linear', // must be one of the allowed values
     },
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: false,
+      },
       tooltip: {
         enabled: true,
         mode: 'nearest',
         intersect: false,
         callbacks: {
-          label: (tooltipItem: import('chart.js').TooltipItem<'line'>) =>
+          label: (tooltipItem) =>
             `${tooltipItem.dataset.label}: ${formatDataSize(Number(tooltipItem.raw))}`,
         },
       },
     },
     scales: {
-      x: { display: false },
-      y: { display: false },
+      x: {
+        display: false,
+      },
+      y: {
+        display: false,
+      },
     },
   };
+
 
 
   const navigate = useNavigate();
@@ -320,9 +328,6 @@ export default function PeersDashboard() {
   const [ipAddress, setIpAddress] = useState('');
   const [isAutoIP, setIsAutoIP] = useState(false);
   const [expandedUsernames, setExpandedUsernames] = useState<Set<string>>(new Set());
-  // Add state for initial RX and TX values
-  const [initialRxHistory, setInitialRxHistory] = useState<{ [peerId: string]: number }>({});
-  const [initialTxHistory, setInitialTxHistory] = useState<{ [peerId: string]: number }>({});
   const [rxHistory, setRxHistory] = useState<{ [peerId: string]: number[] }>({});
   const [txHistory, setTxHistory] = useState<{ [peerId: string]: number[] }>({});
   const { user } = useUserStore();

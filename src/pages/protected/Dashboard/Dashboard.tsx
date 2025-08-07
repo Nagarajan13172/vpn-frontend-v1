@@ -12,28 +12,21 @@ import { Activity, BookOpenCheck, Plane, Users } from "lucide-react"
 import { useUserStore } from "@/global/useUserStore"
 import { useBreadcrumb } from "@/components/breadcrumb/BreadcrumbContext"
 import React, { useEffect, useMemo, useState } from "react"
-import { Line, Pie } from "react-chartjs-2"
+import { Line } from "react-chartjs-2"
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  ArcElement,
   Title,
   Tooltip as ChartTooltip,
   Legend,
+  type ChartOptions,
 } from "chart.js"
 import type { CurrentUser } from "@/types/user"
 
-// Register ChartJS components
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Title, ChartTooltip, Legend)
-
-const shimmerAnimation = {
-  initial: { opacity: 0.4 },
-  animate: { opacity: [0.4, 1, 0.4] },
-  transition: { duration: 1.5, repeat: Number.POSITIVE_INFINITY },
-}
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend)
 
 interface DashboardData {
   peer_count: number
@@ -41,6 +34,12 @@ interface DashboardData {
   total_rx: number
   total_tx: number
   total_data: number
+}
+
+const shimmerAnimation = {
+  initial: { opacity: 0.4 },
+  animate: { opacity: [0.4, 1, 0.4] },
+  transition: { duration: 1.5, repeat: Number.POSITIVE_INFINITY },
 }
 
 const fetchTotalPeers = async (userId: string) => {
@@ -61,6 +60,15 @@ const fetchTotalPeers = async (userId: string) => {
 
 export default function Dashboard() {
   const { setBreadcrumbs } = useBreadcrumb()
+  const { theme } = useTheme()
+  const { user } = useUserStore()
+
+  const [rxTotalHistory, setRxTotalHistory] = useState<number[]>([])
+  const [txTotalHistory, setTxTotalHistory] = useState<number[]>([])
+  const [peers, setPeers] = useState<any[]>([])
+  const [rxHistory, setRxHistory] = useState<{ [peerId: string]: number[] }>({})
+  const [txHistory, setTxHistory] = useState<{ [peerId: string]: number[] }>({})
+
   useEffect(() => {
     setBreadcrumbs([
       {
@@ -73,26 +81,22 @@ export default function Dashboard() {
         href: "/home",
       },
     ])
-    return () => {
-      setBreadcrumbs([])
-    }
+    return () => setBreadcrumbs([])
   }, [setBreadcrumbs])
 
-  const { theme } = useTheme()
-  const { user } = useUserStore()
-
-  // State for RX and TX history
-  const [rxTotalHistory, setRxTotalHistory] = useState<number[]>([])
-  const [txTotalHistory, setTxTotalHistory] = useState<number[]>([])
-
-  // Fetch total peers
-  useQuery({
+  const { data: totalPeersData } = useQuery({
     queryKey: ["totalPeers", user.id],
     queryFn: () => (user.id ? fetchTotalPeers(user.id) : Promise.reject("User ID is null")),
     enabled: !!user?.id,
+    refetchInterval: 1000,
   })
 
-  // Fetch user data
+  useEffect(() => {
+    if (totalPeersData) {
+      setPeers(totalPeersData || [])
+    }
+  }, [totalPeersData])
+
   const { isLoading, data } = useQuery<CurrentUser>({
     queryKey: ["user"],
     queryFn: async (): Promise<CurrentUser> => {
@@ -107,20 +111,20 @@ export default function Dashboard() {
       })
       if (!response.ok) {
         const errorData = await response.json()
-        throw errorData.detail
+        throw new Error(errorData.detail)
       }
       return response.json()
     },
   })
 
-  // Fetch dashboard data
   const { data: dashboardData } = useQuery<DashboardData, Error>({
     queryKey: ["dashboard", user?.role],
     queryFn: async (): Promise<DashboardData> => {
       const authToken = getAuthToken()
-      if (!authToken) throw new Error("No auth token found")
       const endpoint =
-        user?.role === "admin" ? `${base_path}/api/peers/admin_dashboard` : `${base_path}/api/peers/dashboard`
+        user?.role === "admin"
+          ? `${base_path}/api/peers/admin_dashboard`
+          : `${base_path}/api/peers/dashboard`
       const response = await fetch(endpoint, {
         method: "GET",
         headers: {
@@ -132,184 +136,186 @@ export default function Dashboard() {
         const errorData = await response.json()
         throw new Error(errorData.detail || "Failed to fetch dashboard data")
       }
-      const data = await response.json()
-      console.log("Dashboard Data:", data)
-      return data
+      return response.json()
     },
     enabled: !!user,
     refetchInterval: 1000,
   })
 
-  // Update RX and TX history
+  // Update per-peer history
   useEffect(() => {
-    if (!dashboardData) return
-    setRxTotalHistory((prev) => {
-      const newHistory = [...prev.slice(-8), dashboardData.total_rx || 0].slice(-9)
-      console.log("Dashboard - rxTotalHistory:", newHistory)
-      return newHistory
-    })
-    setTxTotalHistory((prev) => {
-      const newHistory = [...prev.slice(-8), dashboardData.total_tx || 0].slice(-9)
-      console.log("Dashboard - txTotalHistory:", newHistory)
-      return newHistory
-    })
-  }, [dashboardData])
+    // Initialize history states when peers are available
+    if (peers.length) {
+      const newRxHistory: { [peerId: string]: number[] } = {};
+      const newTxHistory: { [peerId: string]: number[] } = {};
 
-  // Chart data and options for line charts
-  const labels = useMemo(() => Array.from({ length: 9 }, (_, i) => `${i + 1}`), [])
+      peers.forEach((peer) => {
+        // Initialize history with the current raw RX/TX values
+        newRxHistory[peer.id] = [(rxHistory[peer.id]?.length ? rxHistory[peer.id] : []).slice(-8), peer.rx].flat();
+        newTxHistory[peer.id] = [(txHistory[peer.id]?.length ? txHistory[peer.id] : []).slice(-8), peer.tx].flat();
+      });
+
+      setRxHistory(newRxHistory);
+      setTxHistory(newTxHistory);
+    }
+
+    // Set up interval for continuous updates
+    const interval = setInterval(() => {
+      if (!peers.length) return;
+
+      setRxHistory((prev) => {
+        const newHistory = { ...prev };
+        peers.forEach((peer) => {
+          // Append the raw RX value
+          newHistory[peer.id] = [...(newHistory[peer.id] || []).slice(-8), peer.rx];
+        });
+        return newHistory;
+      });
+
+      setTxHistory((prev) => {
+        const newHistory = { ...prev };
+        peers.forEach((peer) => {
+          // Append the raw TX value
+          newHistory[peer.id] = [...(newHistory[peer.id] || []).slice(-8), peer.tx];
+        });
+        return newHistory;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [peers]);
+
+  // Update RX/TX total history every second
+  useEffect(() => {
+    if (!dashboardData) return;
+    const interval = setInterval(() => {
+      setRxTotalHistory((prev) => [...prev.slice(-8), dashboardData.total_rx || 0]);
+      setTxTotalHistory((prev) => [...prev.slice(-8), dashboardData.total_tx || 0]);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [dashboardData]);
+
+  const labels = useMemo(() => Array.from({ length: 9 }, (_, i) => `${i + 1}s`), [])
   const maxVal = useMemo(() => {
-    const validValues = [...rxTotalHistory, ...txTotalHistory].filter((val) => typeof val === "number" && !isNaN(val))
-    const max = validValues.length > 0 ? Math.max(...validValues) : 1
-    console.log("Dashboard - Max Value (Line Charts):", max)
-    return max
+    const values = [...rxTotalHistory, ...txTotalHistory].filter((v) => !isNaN(v) && v > 0)
+    return values.length ? Math.max(...values) : 1000 // Fallback to avoid zero max
   }, [rxTotalHistory, txTotalHistory])
 
-  const rxChartData = useMemo(
-    () => ({
-      labels,
-      datasets: [
-        {
-          label: "RX",
-          data: rxTotalHistory.length
-            ? rxTotalHistory.map((val) => (typeof val === "number" && !isNaN(val) ? val : 0))
-            : Array(9).fill(0),
-          borderColor: "rgb(54, 162, 235)",
-          backgroundColor: "rgba(54, 162, 235, 0.2)",
-          borderWidth: 2,
-          fill: false,
-          tension: 0.4,
-          pointRadius: 0,
+  const lineChartOptions: ChartOptions<'line'> = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: {
+      duration: 1000,
+      easing: "easeOutCubic", // ✅ now recognized by TypeScript
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: "top",
+        labels: {
+          color: theme === "dark" ? "#e5e7eb" : "#1f2937",
+          font: { size: 12 },
         },
-      ],
-    }),
-    [rxTotalHistory, labels],
-  )
-
-  const txChartData = useMemo(
-    () => ({
-      labels,
-      datasets: [
-        {
-          label: "TX",
-          data: txTotalHistory.length
-            ? txTotalHistory.map((val) => (typeof val === "number" && !isNaN(val) ? val : 0))
-            : Array(9).fill(0),
-          borderColor: "rgb(255, 99, 132)",
-          backgroundColor: "rgba(255, 99, 132, 0.2)",
-          borderWidth: 2,
-          fill: false,
-          tension: 0.4,
-          pointRadius: 0,
-        },
-      ],
-    }),
-    [txTotalHistory, labels],
-  )
-
-  const lineChartOptions = useMemo(
-    () => ({
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {
-        duration: 100,
-        easing: "linear",
       },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          enabled: true,
-          mode: "nearest",
-          intersect: false,
-          position: "nearest",
-          backgroundColor: "rgba(0, 0, 0, 0.8)",
-          titleFont: { size: 12 },
-          bodyFont: { size: 12 },
-          padding: 8,
-          caretPadding: 8,
-          cornerRadius: 4,
-          callbacks: {
-            label: (context: any) => {
-              const value = Number(context.raw)
-              const label = context.dataset.label || ""
-              const formatted = formatDataSize(value)
-              console.log(`Dashboard Line Tooltip - ${label}: ${formatted}`)
-              return `${label}: ${formatted}`
-            },
+      tooltip: {
+        enabled: true,
+        backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
+        titleColor: theme === "dark" ? "#e5e7eb" : "#1f2937",
+        bodyColor: theme === "dark" ? "#e5e7eb" : "#1f2937",
+        borderColor: theme === "dark" ? "#4b5563" : "#d1d5db",
+        borderWidth: 1,
+        callbacks: {
+          label: (ctx) => {
+            const val = Number(ctx.raw) || 0;
+            const label = ctx.dataset.label;
+            return `${label}: ${formatDataSize(val)}`;
           },
         },
       },
-      scales: {
-        x: { display: false },
-        y: {
-          display: false,
-          suggestedMax: maxVal * 1.1,
-          beginAtZero: true,
+    },
+    scales: {
+      x: {
+        display: true,
+        grid: { display: false },
+        ticks: {
+          color: theme === "dark" ? "#9ca3af" : "#6b7280",
         },
       },
-      interaction: {
-        mode: "nearest",
-        intersect: false,
-      },
-    }),
-    [maxVal],
-  )
-
-  // Pie chart data for Total Usage (RX + TX)
-  const pieChartData = useMemo(
-    () => ({
-      labels: ["RX", "TX"],
-      datasets: [
-        {
-          label: "Total Usage",
-          data: [dashboardData?.total_rx || 0, dashboardData?.total_tx || 0].map((val) =>
-            typeof val === "number" && !isNaN(val) ? val : 0,
-          ),
-          backgroundColor: ["rgba(54, 162, 235, 0.6)", "rgba(255, 99, 132, 0.6)"],
-          borderColor: ["rgb(54, 162, 235)", "rgb(255, 99, 132)"],
-          borderWidth: 1,
+      y: {
+        display: true,
+        grid: {
+          color: theme === "dark" ? "#374151" : "#e5e7eb",
         },
-      ],
-    }),
-    [dashboardData],
-  )
-
-  const pieChartOptions = useMemo(
-    () => ({
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true,
-          position: "bottom",
-          labels: {
-            font: { size: 12 },
-            color: theme === "dark" ? "#fff" : "#000",
+        ticks: {
+          color: theme === "dark" ? "#9ca3af" : "#6b7280",
+          callback: function (this, tickValue: string | number) {
+            // Only format if tickValue is a number
+            return typeof tickValue === "number" ? formatDataSize(tickValue) : tickValue;
           },
         },
-        tooltip: {
-          enabled: true,
-          backgroundColor: "rgba(0, 0, 0, 0.8)",
-          titleFont: { size: 12 },
-          bodyFont: { size: 12 },
-          padding: 8,
-          caretPadding: 8,
-          cornerRadius: 4,
-          callbacks: {
-            label: (context: any) => {
-              const value = Number(context.raw)
-              const label = context.label || ""
-              const total = dashboardData?.total_data || 0
-              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0
-              const formatted = formatDataSize(value)
-              console.log(`Dashboard Pie Tooltip - ${label}: ${formatted} (${percentage}%)`)
-              return `${label}: ${formatted} (${percentage}%)`
-            },
-          },
-        },
+        suggestedMax: maxVal * 1.2,
+        beginAtZero: true,
       },
-    }),
-    [dashboardData, theme],
-  )
+    },
+  }), [maxVal, theme])
+
+  const rxChartData = {
+    labels,
+    datasets: [
+      {
+        label: "RX",
+        data: rxTotalHistory.length ? rxTotalHistory : Array(9).fill(0),
+        borderColor: "#3b82f6",
+        backgroundColor: "rgba(59, 130, 246, 0.2)",
+        fill: false,
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 0,
+      },
+    ],
+  }
+
+  const txChartData = {
+    labels,
+    datasets: [
+      {
+        label: "TX",
+        data: txTotalHistory.length ? txTotalHistory : Array(9).fill(0),
+        borderColor: "#ef4444",
+        backgroundColor: "rgba(239, 68, 68, 0.2)",
+        fill: false,
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 0,
+      },
+    ],
+  }
+
+  const combinedChartData = {
+    labels,
+    datasets: [
+      {
+        label: "RX",
+        data: rxTotalHistory.length ? rxTotalHistory : Array(9).fill(0),
+        borderColor: "#3b82f6",
+        backgroundColor: "rgba(59, 130, 246, 0.2)",
+        fill: false,
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 0,
+      },
+      {
+        label: "TX",
+        data: txTotalHistory.length ? txTotalHistory : Array(9).fill(0),
+        borderColor: "#ef4444",
+        backgroundColor: "rgba(239, 68, 68, 0.2)",
+        fill: false,
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 0,
+      },
+    ],
+  }
 
   const cardItems = [
     {
@@ -344,22 +350,17 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-6">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-4 p-2 rounded-lg shadow-md bg-card">
+      <div className="flex items-center gap-3 mb-6 p-4 rounded-xl shadow-lg bg-card border-l-4 border-blue-500">
         {isLoading ? (
           <motion.div
             className="skeleton-circle"
             {...shimmerAnimation}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              backgroundColor: theme === "dark" ? "#444" : "#e0e0e0",
-            }}
+            style={{ width: 40, height: 40, borderRadius: "50%", backgroundColor: theme === "dark" ? "#444" : "#e0e0e0" }}
           />
         ) : (
-          <Users className="h-10 w-10 text-green-500" />
+          <Users className="h-10 w-10 text-blue-500" />
         )}
         <div>
           <h3 className="text-sm text-muted-foreground">Welcome!</h3>
@@ -367,27 +368,27 @@ export default function Dashboard() {
             <motion.div
               className="skeleton-text"
               {...shimmerAnimation}
-              style={{
-                width: 200,
-                height: 32,
-                backgroundColor: theme === "dark" ? "#444" : "#e0e0e0",
-              }}
+              style={{ width: 200, height: 32, backgroundColor: theme === "dark" ? "#444" : "#e0e0e0" }}
             />
           ) : (
             <h1 className="text-2xl font-bold text-foreground">{data?.username}</h1>
           )}
         </div>
       </div>
-      <hr className="my-4 border-t border-border" />
 
-      {/* Cards Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <hr className="my-6 border-t border-border" />
+
+      {/* Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {cardItems.map((item, index) => (
-          <Card key={index} className={`border-l-4 ${item.borderColor} bg-card transition-shadow hover:shadow-md`}>
-            <CardContent className="flex items-center justify-between p-4">
+          <Card
+            key={index}
+            className={`relative bg-card rounded-xl shadow-lg border-l-4 ${item.borderColor} hover:shadow-xl transition-shadow duration-300`}
+          >
+            <CardContent className="flex items-center justify-between p-6">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">{item.title}</p>
-                <div className="text-2xl font-bold mt-1">
+                <p className="text-sm text-muted-foreground">{item.title}</p>
+                <div className="text-2xl font-bold mt-1 text-foreground">
                   {isLoading ? (
                     <Skeleton className="h-8 w-24" />
                   ) : (
@@ -407,39 +408,35 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Total Usage Pie Chart */}
-      <div className="mt-6">
-        <Card className="bg-card">
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <Card className="relative bg-card rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-shadow duration-300">
           <CardHeader>
-            <CardTitle>Total Usage Breakdown</CardTitle>
+            <CardTitle className="text-lg font-semibold text-foreground">Total Received</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px] w-full flex items-center justify-center">
-              <Pie data={pieChartData} options={pieChartOptions} />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* RX and TX Line Charts */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-        <Card className="bg-card">
-          <CardHeader>
-            <CardTitle>Total Received Over Time</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[100px] w-full">
+            <div className="h-[150px]">
               <Line data={rxChartData} options={lineChartOptions} />
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-card">
+        <Card className="relative bg-card rounded-xl shadow-lg border-l-4 border-red-500 hover:shadow-xl transition-shadow duration-300">
           <CardHeader>
-            <CardTitle>Total Sent Over Time</CardTitle>
+            <CardTitle className="text-lg font-semibold text-foreground">Total Sent</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[100px] w-full">
+            <div className="h-[150px]">
               <Line data={txChartData} options={lineChartOptions} />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="relative bg-card rounded-xl shadow-lg border-l-4 border-purple-500 hover:shadow-xl transition-shadow duration-300">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-foreground">Total RX/TX Over Time</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[150px]">
+              <Line data={combinedChartData} options={lineChartOptions} />
             </div>
           </CardContent>
         </Card>
