@@ -5,7 +5,7 @@ import { useParams, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { BookOpenCheck, Download, MoreVertical, QrCode, Share, Server, Upload, DownloadCloud, Layers } from 'lucide-react';
+import { BookOpenCheck, Download, MoreVertical, QrCode, Share, Server, Upload, DownloadCloud, Layers, BarChart } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAuthToken } from '@/api/getAuthToken';
 import { base_path } from '@/api/api';
@@ -411,27 +411,36 @@ const PeerDetails = () => {
                 </div>
                 <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-shadow duration-300">
                     <div className="p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                            <DownloadCloud className="h-5 w-5 text-green-500" />
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Total Received</h3>
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <DownloadCloud className="h-5 w-5 text-green-500" />
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Total Received</h3>
+                            </div>
+                            <Download className="h-7 w-7 text-green-500" />
                         </div>
                         <p className="text-lg text-gray-700 dark:text-gray-300">{formatDataSize(peerData?.rx)}</p>
                     </div>
                 </div>
                 <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-yellow-500 hover:shadow-xl transition-shadow duration-300">
                     <div className="p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Upload className="h-5 w-5 text-yellow-500" />
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Total Sent</h3>
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <Upload className="h-5 w-5 text-yellow-500" />
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Total Sent</h3>
+                            </div>
+                            <Upload className="h-7 w-7 text-yellow-500" />
                         </div>
                         <p className="text-lg text-gray-700 dark:text-gray-300">{formatDataSize(peerData?.tx)}</p>
                     </div>
                 </div>
                 <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-purple-500 hover:shadow-xl transition-shadow duration-300">
                     <div className="p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Layers className="h-5 w-5 text-purple-500" />
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Total Usage</h3>
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <Layers className="h-7 w-7 text-purple-500" />
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Total Usage</h3>
+                            </div>
+                            <BarChart className="h-7 w-7 text-purple-500" />
                         </div>
                         <p className="text-lg text-gray-700 dark:text-gray-300">{formatDataSize((peerData?.tx || 0) + (peerData?.rx || 0))}</p>
                     </div>

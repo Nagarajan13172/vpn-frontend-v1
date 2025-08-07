@@ -27,7 +27,11 @@ function App() {
             <Route path="/peers/:id" element={<PeerDetails />} />
             <Route path="/users" element={<Users />} />
             <Route path="/users/:id/:username" element={<UserPeerView />} />
+            <Route path="/settings" element={<div>Settings Page</div>} />
+            <Route path="/help" element={<div>Help Page</div>} />
           </Route>
+        </Route>
+        <Route path="*" element={<div>404 Not Found</div>}> {/* Fallback route for unmatched paths */}
         </Route>
       </Routes>
     </>
