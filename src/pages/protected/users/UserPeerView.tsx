@@ -511,14 +511,6 @@ export default function UserPeerView() {
     }
   };
 
-  const handleCloseModal = () => {
-    setIsOpen(false);
-    setDeviceName("");
-    setIpAddress("");
-    setIsAutoIP(false);
-    setIsEditMode(false);
-    setSelectedPeer(null);
-  };
 
   return (
     <div className=" mx-auto ">
