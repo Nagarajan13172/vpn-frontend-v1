@@ -570,7 +570,7 @@ const PeerDetails = () => {
                             Create DNS
                         </Button>
 
-                        <h1>{peerData?.dns?.map((dns, index) => (
+                        <h1>{peerData?.dns?.map((dns: string, index: number) => (
                            <li key={index}>{dns}</li>
                         ))}</h1>
 
