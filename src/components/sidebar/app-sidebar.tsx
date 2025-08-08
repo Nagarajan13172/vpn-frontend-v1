@@ -70,6 +70,7 @@ export function AppSidebar() {
   const [statsHistory, setStatsHistory] = useState<StatsHistoryPoint[]>([]);
 
 
+
   const { isMobile, setOpenMobile } = useSidebar();
 
   const navigate = useNavigate();
@@ -144,7 +145,7 @@ export function AppSidebar() {
 
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" >
       <SidebarHeader>
         <Link to="/dashboard">
           <SidebarMenuButton

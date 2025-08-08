@@ -1,5 +1,5 @@
 import { Progress } from '@/components/ui/progress';
-import { Cpu, HardDrive, MemoryStick, Network, Terminal } from 'lucide-react';
+import { Cpu, MemoryStick, Network, Terminal } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -43,31 +43,31 @@ export function ServerStats({ stats, history }: { stats: Stats; history: StatsHi
     };
 
 
-    const blockIOChartData = {
-        labels,
-        datasets: [
-            {
-                label: 'Read (MB)',
-                data: computeDelta(history, 'rawBlockRead'),
-                borderColor: 'rgb(54, 162, 235)',
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderWidth: 2,
-                fill: false,
-                tension: 0.4,
-                pointRadius: 0,
-            },
-            {
-                label: 'Write (MB)',
-                data: computeDelta(history, 'rawBlockWrite'),
-                borderColor: 'rgb(255, 99, 132)',
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderWidth: 2,
-                fill: false,
-                tension: 0.4,
-                pointRadius: 0,
-            },
-        ],
-    };
+    // const blockIOChartData = {
+    //     labels,
+    //     datasets: [
+    //         {
+    //             label: 'Read (MB)',
+    //             data: computeDelta(history, 'rawBlockRead'),
+    //             borderColor: 'rgb(54, 162, 235)',
+    //             backgroundColor: 'rgba(54, 162, 235, 0.2)',
+    //             borderWidth: 2,
+    //             fill: false,
+    //             tension: 0.4,
+    //             pointRadius: 0,
+    //         },
+    //         {
+    //             label: 'Write (MB)',
+    //             data: computeDelta(history, 'rawBlockWrite'),
+    //             borderColor: 'rgb(255, 99, 132)',
+    //             backgroundColor: 'rgba(255, 99, 132, 0.2)',
+    //             borderWidth: 2,
+    //             fill: false,
+    //             tension: 0.4,
+    //             pointRadius: 0,
+    //         },
+    //     ],
+    // };
 
 
     const netIOChartData = {

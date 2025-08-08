@@ -29,13 +29,15 @@ export const peerStatus = (timestamp: number) => {
 };
 
 
-export function formatData(bytes: number, unit: 'KB' | 'MB' | 'GB' = 'MB'): string {
-  if (bytes === 0) return '0 ' + unit;
+export function formatData(bytes: number, unit: 'B' | 'KB' | 'MB' | 'GB' | 'TB' = 'MB'): string {
+  if (bytes === 0) return '0';
 
   const units = {
+    B: 1,
     KB: 1024,
     MB: 1024 * 1024,
     GB: 1024 * 1024 * 1024,
+    TB: 1024 * 1024 * 1024 * 1024,
   };
 
   const value = bytes / units[unit];

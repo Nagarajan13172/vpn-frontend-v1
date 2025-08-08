@@ -1,5 +1,5 @@
 
-import { Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
 import {
     SidebarInset,
     SidebarProvider,
@@ -9,9 +9,11 @@ import { Separator } from "@radix-ui/react-separator";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { ModeToggle } from "@/components/ThemeProvider/mode-toggle";
 import CustomBreadcrumb from "@/components/breadcrumb/CustomBreadcrumb";
+import { getCookie } from "typescript-cookie";
 
 export default function SideMenuLayout() {
-    const open = true;
+    const open = getCookie("sidebar_state") === "true" ? true : false;
+
 
     return (
         <SidebarProvider defaultOpen={open}>

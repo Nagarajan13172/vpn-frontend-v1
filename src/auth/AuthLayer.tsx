@@ -4,6 +4,7 @@ import { base_path } from '../api/api';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useUserStore } from '@/global/useUserStore';
+import WifiLoader from '@/Loader/Loader';
 
 function AuthLayer() {
   const navigate = useNavigate();
@@ -56,8 +57,8 @@ function AuthLayer() {
 
   if (isLoading) {
     return (
-      <div>
-        <h1>Loading....</h1>
+      <div className="flex items-center justify-center h-screen">
+        <WifiLoader />
       </div>
     );
   }

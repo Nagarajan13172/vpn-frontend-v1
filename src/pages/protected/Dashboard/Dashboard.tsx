@@ -70,7 +70,7 @@ export default function Dashboard() {
   const [peers, setPeers] = useState<any[]>([])
   const [rxHistory, setRxHistory] = useState<{ [peerId: string]: number[] }>({})
   const [txHistory, setTxHistory] = useState<{ [peerId: string]: number[] }>({})
-  const [selectedUnit, setSelectedUnit] = useState<'KB' | 'MB' | 'GB'>('MB') // State for unit selection
+  const [selectedUnit, setSelectedUnit] = useState<'B' | 'KB' | 'MB' | 'GB' | 'TB'>('MB') // State for unit selection
 
   useEffect(() => {
     setBreadcrumbs([
@@ -356,77 +356,82 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6 p-4 rounded-xl shadow-lg bg-card border-l-4 border-blue-500">
+      <div className="flex items-center gap-3 mb-4 sm:mb-6 p-4 rounded-xl shadow-lg bg-card border-l-4 border-blue-500">
         {isLoading ? (
           <motion.div
             className="skeleton-circle"
             {...shimmerAnimation}
-            style={{ width: 40, height: 40, borderRadius: "50%", backgroundColor: theme === "dark" ? "#444" : "#e0e0e0" }}
+            style={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: theme === "dark" ? "#444" : "#e0e0e0" }}
           />
         ) : (
-          <Users className="h-10 w-10 text-blue-500" />
+          <Users className="h-8 w-8 sm:h-10 sm:w-10 text-blue-500" />
         )}
-        <div>
-          <h3 className="text-sm text-muted-foreground">Welcome!</h3>
+        <div className="flex-1">
+          <h3 className="text-xs sm:text-sm text-muted-foreground">Welcome!</h3>
           {isLoading ? (
             <motion.div
               className="skeleton-text"
               {...shimmerAnimation}
-              style={{ width: 200, height: 32, backgroundColor: theme === "dark" ? "#444" : "#e0e0e0" }}
+              style={{ width: "70%", height: 24, backgroundColor: theme === "dark" ? "#444" : "#e0e0e0" }}
             />
           ) : (
-            <h1 className="text-2xl font-bold text-foreground">{data?.username}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{data?.username}</h1>
           )}
         </div>
       </div>
 
-      <hr className="my-6 border-t border-border" />
+      <hr className="my-4 sm:my-6 border-t border-border" />
 
       {/* Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {cardItems.map((item, index) => (
           <Card
             key={index}
             className={`relative bg-card rounded-xl shadow-lg border-l-4 ${item.borderColor} hover:shadow-xl transition-shadow duration-300`}
           >
-            <CardContent className="flex items-center justify-between p-6">
-              <div>
-                <p className="text-sm text-muted-foreground">{item.title}</p>
-                <div className="flex items-center gap-2  font-bold mt-1 text-foreground">
+            <CardContent className="flex items-center justify-between p-4 sm:p-6">
+              <div className="flex-1">
+                <p className="text-xs sm:text-sm text-muted-foreground">{item.title}</p>
+                <div className="flex items-center gap-2 font-bold mt-1 text-foreground text-sm sm:text-base">
                   {isLoading ? (
-                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-6 w-20 sm:h-8 sm:w-24" />
                   ) : (
-                    <>
+                    <div className="flex items-center gap-1">
                       {item.title === "Connected Peers" ? (
-                        `${item.value ?? 0} / ${item.total ?? 0}`
+                        <span>{`${item.value ?? 0} / ${item.total ?? 0}`}</span>
+                      ) : item.showDropdown ? (
+                        <Select
+                          value={selectedUnit}
+                          onValueChange={(value: "B" | "KB" | "MB" | "GB" | "TB") =>
+                            setSelectedUnit(value)
+                          }
+                        >
+                          <SelectTrigger className="w-fit h-auto p-2 text-sm bg-transparent border-none focus:outline-none focus:ring-0 text-red-500">
+                            <SelectValue>
+                              {formatData(item.value || 0, selectedUnit)}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="B">B</SelectItem>
+                            <SelectItem value="KB">KB</SelectItem>
+                            <SelectItem value="MB">MB</SelectItem>
+                            <SelectItem value="GB">GB</SelectItem>
+                            <SelectItem value="TB">TB</SelectItem>
+                          </SelectContent>
+                        </Select>
                       ) : (
-                        <>
-                          {formatData(item.value || 0, selectedUnit)}
-                          {item.showDropdown && (
-                            <Select
-                              value={selectedUnit}
-                              onValueChange={(value: 'KB' | 'MB' | 'GB') => setSelectedUnit(value)}
-                            >
-                              <SelectTrigger className="">
-                                <SelectValue placeholder="Unit" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="KB">KB</SelectItem>
-                                <SelectItem value="MB">MB</SelectItem>
-                                <SelectItem value="GB">GB</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        </>
+                        <span>{formatData(item.value || 0, selectedUnit)}</span>
                       )}
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
-              <div className={`p-3 rounded-lg ${item.iconBgColor}`}>
-                {React.cloneElement(item.icon, { className: `${item.icon.props.className} h-8 w-8` })}
+              <div className={`p-2 sm:p-3 rounded-lg ${item.iconBgColor}`}>
+                {React.cloneElement(item.icon, {
+                  className: `${item.icon.props.className ?? ""} h-6 w-6 sm:h-8 sm:w-8`,
+                })}
               </div>
             </CardContent>
           </Card>
@@ -434,33 +439,33 @@ export default function Dashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">
         <Card className="relative bg-card rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-shadow duration-300">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-foreground">Total Received</CardTitle>
+            <CardTitle className="text-base sm:text-lg font-semibold text-foreground">Total Received</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[150px]">
+            <div className="h-[120px] sm:h-[150px]">
               <Line data={rxChartData} options={lineChartOptions} />
             </div>
           </CardContent>
         </Card>
         <Card className="relative bg-card rounded-xl shadow-lg border-l-4 border-red-500 hover:shadow-xl transition-shadow duration-300">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-foreground">Total Sent</CardTitle>
+            <CardTitle className="text-base sm:text-lg font-semibold text-foreground">Total Sent</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[150px]">
+            <div className="h-[120px] sm:h-[150px]">
               <Line data={txChartData} options={lineChartOptions} />
             </div>
           </CardContent>
         </Card>
         <Card className="relative bg-card rounded-xl shadow-lg border-l-4 border-purple-500 hover:shadow-xl transition-shadow duration-300">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-foreground">Total RX/TX Over Time</CardTitle>
+            <CardTitle className="text-base sm:text-lg font-semibold text-foreground">Total RX/TX Over Time</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[150px]">
+            <div className="h-[120px] sm:h-[150px]">
               <Line data={combinedChartData} options={lineChartOptions} />
             </div>
           </CardContent>
