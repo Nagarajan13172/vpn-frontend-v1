@@ -12,6 +12,7 @@ import {
     Legend,
     type ChartOptions,
 } from 'chart.js';
+import { useState, useEffect } from 'react';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -35,6 +36,17 @@ export interface StatsHistoryPoint {
 export function ServerStats({ stats, history }: { stats: Stats; history: StatsHistoryPoint[] }) {
     const cpuPercentage = parseFloat(stats.CPUPerc.replace('%', ''));
     const memPercentage = parseFloat(stats.MemPerc.replace('%', ''));
+
+    const [animatedCpu, setAnimatedCpu] = useState(0);
+    const [animatedMem, setAnimatedMem] = useState(0);
+
+    useEffect(() => {
+        setAnimatedCpu(cpuPercentage);
+    }, [cpuPercentage]);
+
+    useEffect(() => {
+        setAnimatedMem(memPercentage);
+    }, [memPercentage]);
 
     const labels = history.map((point) => point.name);
 
@@ -115,6 +127,12 @@ export function ServerStats({ stats, history }: { stats: Stats; history: StatsHi
 
     return (
         <div className="space-y-4 text-sm p-2 group-data-[collapsible=icon]:hidden">
+            <style>{`
+                .smooth-progress > div {
+                    transition-duration: 2000ms;
+                    transition-timing-function: ease-in-out;
+                }
+            `}</style>
             <div>
                 <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -124,8 +142,8 @@ export function ServerStats({ stats, history }: { stats: Stats; history: StatsHi
                     <span className="font-mono text-muted-foreground">{stats.CPUPerc}</span>
                 </div>
                 <Progress
-                    value={cpuPercentage}
-                    className="h-2 transition-all duration-5000"
+                    value={animatedCpu}
+                    className="h-2 smooth-progress"
                 />
             </div>
             <div>
@@ -136,7 +154,10 @@ export function ServerStats({ stats, history }: { stats: Stats; history: StatsHi
                     </div>
                     <span className="font-mono text-muted-foreground">{stats.MemPerc}</span>
                 </div>
-                <Progress value={memPercentage} className="h-2" />
+                <Progress
+                    value={animatedMem}
+                    className="h-2 smooth-progress"
+                />
                 <p className="text-xs text-muted-foreground mt-1 text-right">{stats.MemUsage}</p>
             </div>
             <div className="space-y-3">
