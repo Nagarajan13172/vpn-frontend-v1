@@ -101,7 +101,7 @@ export function AppSidebar() {
       }
       return response.json();
     },
-    refetchInterval: 5000,
+    refetchInterval: 3000,
     
   });
 
@@ -147,7 +147,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" >
       <SidebarHeader>
-        <Link to="/dashboard">
+        <Link to="/">
           <SidebarMenuButton
             size="lg"
             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-transparent"

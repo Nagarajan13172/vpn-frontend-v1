@@ -4,7 +4,6 @@
 import { useTheme } from "next-themes"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select" // Import Select components
 import { motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { base_path } from "@/api/api"
@@ -70,7 +69,7 @@ export default function Dashboard() {
   const [peers, setPeers] = useState<any[]>([])
   const [rxHistory, setRxHistory] = useState<{ [peerId: string]: number[] }>({})
   const [txHistory, setTxHistory] = useState<{ [peerId: string]: number[] }>({})
-  const [selectedUnit, setSelectedUnit] = useState<'B' | 'KB' | 'MB' | 'GB' | 'TB'>('MB') // State for unit selection
+  const [selectedUnit, setSelectedUnit] = useState<'B' | 'KB' | 'MB' | 'GB' | 'TB'>('B')
 
   useEffect(() => {
     setBreadcrumbs([
@@ -213,7 +212,7 @@ export default function Dashboard() {
     },
     plugins: {
       legend: {
-        display: true,
+        display: false,
         position: "top",
         labels: {
           color: theme === "dark" ? "#e5e7eb" : "#1f2937",
@@ -383,60 +382,58 @@ export default function Dashboard() {
       </div>
 
       <hr className="my-4 sm:my-6 border-t border-border" />
-
-      {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {cardItems.map((item, index) => (
           <Card
-            key={index}
-            className={`relative bg-card rounded-xl shadow-lg border-l-4 ${item.borderColor} hover:shadow-xl transition-shadow duration-300`}
+        key={index}
+        className={`relative bg-card rounded-xl shadow-lg border-l-4 ${item.borderColor} hover:shadow-xl transition-shadow duration-300`}
           >
-            <CardContent className="flex items-center justify-between p-4 sm:p-6">
-              <div className="flex-1">
-                <p className="text-xs sm:text-sm text-muted-foreground">{item.title}</p>
-                <div className="flex items-center gap-2 font-bold mt-1 text-foreground text-sm sm:text-base">
-                  {isLoading ? (
-                    <Skeleton className="h-6 w-20 sm:h-8 sm:w-24" />
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      {item.title === "Connected Peers" ? (
-                        <span>{`${item.value ?? 0} / ${item.total ?? 0}`}</span>
-                      ) : item.showDropdown ? (
-                        <Select
-                          value={selectedUnit}
-                          onValueChange={(value: "B" | "KB" | "MB" | "GB" | "TB") =>
-                            setSelectedUnit(value)
-                          }
-                        >
-                          <SelectTrigger className="w-fit h-auto p-2 text-sm bg-transparent border-none focus:outline-none focus:ring-0 text-red-500">
-                            <SelectValue>
-                              {formatData(item.value || 0, selectedUnit)}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="B">B</SelectItem>
-                            <SelectItem value="KB">KB</SelectItem>
-                            <SelectItem value="MB">MB</SelectItem>
-                            <SelectItem value="GB">GB</SelectItem>
-                            <SelectItem value="TB">TB</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <span>{formatData(item.value || 0, selectedUnit)}</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className={`p-2 sm:p-3 rounded-lg ${item.iconBgColor}`}>
-                {React.cloneElement(item.icon, {
-                  className: `${item.icon.props.className ?? ""} h-6 w-6 sm:h-8 sm:w-8`,
-                })}
-              </div>
-            </CardContent>
+        <CardContent className="flex items-center justify-between p-4 sm:p-6">
+          <div className="flex-1">
+            <p className="text-xs sm:text-sm text-muted-foreground">{item.title}</p>
+            <div className="flex items-center gap-2 font-bold mt-1 text-foreground text-sm sm:text-base">
+          {isLoading ? (
+            <Skeleton className="h-6 w-20 sm:h-8 sm:w-24" />
+          ) : (
+            <div className="flex items-center gap-1">
+              {item.title === "Connected Peers" ? (
+            <span>{`${item.value ?? 0} / ${item.total ?? 0}`}</span>
+              ) : item.showDropdown ? (
+            <>
+              <span>
+                {formatData(item.value || 0, selectedUnit).split(" ")[0]}
+              </span>
+              <select
+                className=""
+                value={selectedUnit}
+                onChange={e =>
+              setSelectedUnit(e.target.value as "B" | "KB" | "MB" | "GB" | "TB")
+                }
+              >
+                <option value="B" className="dark:text-black">B</option>
+                <option value="KB" className="dark:text-black">KB</option>
+                <option value="MB" className="dark:text-black">MB</option>
+                <option value="GB" className="dark:text-black">GB</option>
+                <option value="TB" className="dark:text-black">TB</option>
+              </select>
+            </>
+              ) : (
+            <span>{formatData(item.value || 0, selectedUnit)}</span>
+              )}
+            </div>
+          )}
+            </div>
+          </div>
+          <div className={`p-2 sm:p-3 rounded-lg ${item.iconBgColor}`}>
+            {React.cloneElement(item.icon, {
+          className: `${item.icon.props.className ?? ""} h-6 w-6 sm:h-8 sm:w-8`,
+            })}
+          </div>
+        </CardContent>
           </Card>
         ))}
       </div>
+
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">

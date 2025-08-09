@@ -4,7 +4,8 @@ import { base_path } from '../api/api';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useUserStore } from '@/global/useUserStore';
-import WifiLoader from '@/Loader/Loader';
+import WifiLoader from '@/utils/Loader';
+
 
 function AuthLayer() {
   const navigate = useNavigate();

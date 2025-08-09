@@ -12,7 +12,7 @@ import CustomBreadcrumb from "@/components/breadcrumb/CustomBreadcrumb";
 import { getCookie } from "typescript-cookie";
 
 export default function SideMenuLayout() {
-    const open = getCookie("sidebar_state") === "true" ? true : false;
+    const open = getCookie("sidebar_state") === "false" ? true : false;
 
 
     return (

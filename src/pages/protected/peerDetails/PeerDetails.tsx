@@ -283,13 +283,6 @@ const PeerDetails = () => {
         setIsDeleteModalOpen(false);
     };
 
-    const handleAddDns = () => {
-        if (!dnsInput.trim()) {
-            toast.error('Please enter a valid DNS address');
-            return;
-        }
-        addDnsMutation.mutate(dnsInput);
-    };
 
     const labels = useMemo(() => Array.from({ length: 9 }, (_, i) => `${i + 1}s`), []);
     const maxVal = useMemo(() => {
@@ -503,14 +496,16 @@ const PeerDetails = () => {
                 </div>
                 <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-shadow duration-300">
                     <div className="p-4 sm:p-6">
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-centermb-2">
                             <div className="flex items-center gap-2">
                                 <DownloadCloud className="h-5 w-5 text-green-500" />
                                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Total Received</h3>
                             </div>
+                        </div>
+                        <div className='flex items-center justify-between mt-2'>
+                            <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300">{formatDataSize(peerData?.rx)}</p>
                             <Download className="h-6 w-6 sm:h-7 sm:w-7 text-green-500" />
                         </div>
-                        <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300">{formatDataSize(peerData?.rx)}</p>
                     </div>
                 </div>
                 <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-yellow-500 hover:shadow-xl transition-shadow duration-300">
@@ -520,9 +515,11 @@ const PeerDetails = () => {
                                 <Upload className="h-5 w-5 text-yellow-500" />
                                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Total Sent</h3>
                             </div>
+                        </div>
+                        <div className='flex items-center justify-between mt-2'>
+                            <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300">{formatDataSize(peerData?.tx)}</p>
                             <Upload className="h-6 w-6 sm:h-7 sm:w-7 text-yellow-500" />
                         </div>
-                        <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300">{formatDataSize(peerData?.tx)}</p>
                     </div>
                 </div>
                 <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-purple-500 hover:shadow-xl transition-shadow duration-300">
@@ -532,11 +529,13 @@ const PeerDetails = () => {
                                 <Layers className="h-6 w-6 sm:h-7 sm:w-7 text-purple-500" />
                                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Total Usage</h3>
                             </div>
+                        </div>
+                        <div className='flex items-center justify-between mt-2'>
+                            <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300">
+                                {formatDataSize((peerData?.tx || 0) + (peerData?.rx || 0))}
+                            </p>
                             <BarChart className="h-6 w-6 sm:h-7 sm:w-7 text-purple-500" />
                         </div>
-                        <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300">
-                            {formatDataSize((peerData?.tx || 0) + (peerData?.rx || 0))}
-                        </p>
                     </div>
                 </div>
             </div>
@@ -642,18 +641,28 @@ const PeerDetails = () => {
                     <div className="p-4 space-y-4">
                         <div>
                             <Label htmlFor="dns-input" className="text-gray-900 dark:text-gray-100 text-sm sm:text-base">DNS Address</Label>
-                            <Input
-                                id="dns-input"
-                                value={dnsInput}
-                                onChange={(e) => setDnsInput(e.target.value)}
-                                placeholder="e.g., 8.8.8.8"
-                                className="mt-1 text-sm sm:text-base"
-                            />
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    id="dns-input"
+                                    value={dnsInput}
+                                    onChange={(e) => setDnsInput(e.target.value)}
+                                    placeholder="e.g., test1"
+                                    className="mt-1 text-sm sm:text-base"
+                                />
+                                <span className="text-gray-500 dark:text-gray-400 text-sm">.ys</span>
+                            </div>
                         </div>
                         <div className="flex justify-end gap-2">
                             <Button
                                 variant="default"
-                                onClick={handleAddDns}
+                                onClick={() => {
+                                    if (!dnsInput.trim()) {
+                                        toast.error('Please enter a valid DNS address');
+                                        return;
+                                    }
+                                    const dnsToAdd = dnsInput.endsWith('.ys') ? dnsInput : `${dnsInput}.ys`;
+                                    addDnsMutation.mutate(dnsToAdd);
+                                }}
                                 className="text-xs sm:text-sm w-full sm:w-auto"
                             >
                                 Add DNS
