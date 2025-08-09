@@ -376,7 +376,7 @@ export default function Dashboard() {
               style={{ width: "70%", height: 24, backgroundColor: theme === "dark" ? "#444" : "#e0e0e0" }}
             />
           ) : (
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{data?.username}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate capitalize">{data?.username}</h1>
           )}
         </div>
       </div>
