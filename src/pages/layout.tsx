@@ -37,7 +37,7 @@ export default function SideMenuLayout() {
                     </div>
                 </header>
                 <div className="p-2 md:p-4 w-full overflow-x-hidden">
-                    <div className="min-h-[80h]">
+                    <div className="min-h-[80vh]">
                         <Outlet />
                     </div>
                     <footer className="w-full text-center py-4 text-sm text-muted-foreground">
