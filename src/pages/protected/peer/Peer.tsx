@@ -330,7 +330,7 @@ export default function PeersDashboard() {
             Peers
           </div>
         ),
-        href: "/Peers",
+        href: "/peers",
       },
     ]);
 

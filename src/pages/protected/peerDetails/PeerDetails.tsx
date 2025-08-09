@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet';
-import { BookOpenCheck, Download, MoreVertical, QrCode, Share, Server, Upload, DownloadCloud, Layers, BarChart, Globe, Copy } from 'lucide-react';
+import { BookOpenCheck, Download, MoreVertical, QrCode, Share, Server, Upload, DownloadCloud, Layers, BarChart, Globe, Copy, Trash2 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAuthToken } from '@/api/getAuthToken';
 import { base_path } from '@/api/api';
@@ -32,6 +32,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import DeleteDnsConfirmationModal from '../peer/components/DeleteDnsConfirmationModel';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend);
 
@@ -54,6 +55,8 @@ const PeerDetails = () => {
     const [rxHistory, setRxHistory] = useState<number[]>([]);
     const [txHistory, setTxHistory] = useState<number[]>([]);
     const [selectedUnit, setSelectedUnit] = useState<'B' | 'KB' | 'MB' | 'GB' | 'TB'>('MB');
+    const [isDeleteDnsModalOpen, setIsDeleteDnsModalOpen] = useState(false);
+    const [selectedDns, setSelectedDns] = useState<string | null>(null);
 
     useEffect(() => {
         setBreadcrumbs([
@@ -64,7 +67,7 @@ const PeerDetails = () => {
                         Peers
                     </div>
                 ),
-                href: "/Peers",
+                href: "/peers",
             },
             {
                 label: "Peer-details",
@@ -149,6 +152,32 @@ const PeerDetails = () => {
             setIsDnsDialogOpen(false);
             setDnsInput('');
             queryClient.invalidateQueries({ queryKey: ['peer', id] });
+        },
+        onError: (error) => {
+            toast.error(error.message);
+        },
+    });
+
+    const deleteDns = useMutation<string | undefined, Error, string>({
+        mutationFn: async (dns) => {
+            const authToken = getAuthToken();
+            const response = await fetch(`${base_path}/api/peers/${id}/delete-dns`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+                body: JSON.stringify( [dns] ),
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.detail || 'Failed to delete DNS.');
+            }
+            return response.json();
+        },
+        onSuccess: () => {
+            toast.success('DNS Deleted Successfully!');
+            setDnsList((prev) => prev.filter((dns) => dns !== selectedDns));
+            queryClient.invalidateQueries({ queryKey: ['peer', id] });
+            setIsDeleteDnsModalOpen(false);
+            setSelectedDns(null);
         },
         onError: (error) => {
             toast.error(error.message);
@@ -245,19 +274,36 @@ const PeerDetails = () => {
         mutation.mutate(undefined, {
             onSuccess: (data) => {
                 toast.success('Peer Configuration Generated Successfully');
+                const configText = typeof data === 'string'
+                    ? data.replace(/^"|"$/g, '').replace(/\\n/g, '\n')
+                    : '';
+
+                const peerName = peerData?.peer_name || 'peer';
+
+                const commands = [
+                    {
+                        heading: 'Cold Boot',
+                        items: [`sudo wg-quick up ${peerName}`],
+                    },
+                    {
+                        heading: 'On Boot',
+                        items: [
+                            `sudo systemctl enable wg-quick@${peerName}.service`,
+                            `sudo systemctl start wg-quick@${peerName}.service`,
+                        ],
+                    },
+                ];
+
                 const configContent = (
                     <div className="w-full flex flex-col items-center justify-center p-4">
-                        <pre className="text-sm p-4 rounded overflow-auto whitespace-pre-wrap break-words bg-gray-100 dark:bg-gray-800" id="peer-config-content">
-                            {typeof data === 'string' ? data.replace(/\\n/g, '\n').replace(/^"|"$/g, '') : data}
+                        <pre className="text-sm p-2 rounded overflow-auto whitespace-pre-wrap break-words bg-gray-100 dark:bg-gray-800 mt-0" id="peer-config-content">
+                            {configText}
                         </pre>
                         <Button
                             variant="outline"
                             size="sm"
                             className="mt-4"
                             onClick={async () => {
-                                const configText = typeof data === 'string'
-                                    ? data.replace(/^"|"$/g, '').replace(/\\n/g, '\n')
-                                    : '';
                                 try {
                                     await navigator.clipboard.writeText(configText);
                                     toast.success('Configuration copied to clipboard');
@@ -266,8 +312,38 @@ const PeerDetails = () => {
                                 }
                             }}
                         >
-                            Copy
+                            Copy Config
                         </Button>
+                        <div className="w-full mt-6">
+                            <h3 className="font-semibold text-base mb-2 flex justify-center items-center text-center">Commands</h3>
+                            {commands.map((cmd, idx) => (
+                                <div key={idx} className="mb-4">
+                                    <div className="font-medium text-sm mb-1">{cmd.heading}</div>
+                                    <ul className="list-disc pl-5">
+                                        {cmd.items.map((item, i) => (
+                                            <li key={i} className="font-mono text-xs bg-gray-200 dark:bg-gray-700 rounded px-2 py-1 my-1 flex items-center justify-between">
+                                                <span>{item}</span>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="ml-2"
+                                                    onClick={async () => {
+                                                        try {
+                                                            await navigator.clipboard.writeText(item);
+                                                            toast.success('Command copied to clipboard');
+                                                        } catch {
+                                                            toast.error('Failed to copy command');
+                                                        }
+                                                    }}
+                                                >
+                                                    <Copy className="w-4 h-4 text-blue-600" />
+                                                </Button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 );
                 setModalContent(configContent);
@@ -495,7 +571,7 @@ const PeerDetails = () => {
                         </div>
                     </div>
                 </div>
-                        {/* Total Sent with dropdown */}
+                {/* Total Sent with dropdown */}
                 <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-yellow-500 hover:shadow-xl transition-shadow duration-300">
                     <div className="p-4 sm:p-6">
                         <div className="flex items-center justify-between mb-2">
@@ -553,7 +629,7 @@ const PeerDetails = () => {
                         </div>
                     </div>
                 </div>
-        
+
                 {/* Total Usage with dropdown */}
                 <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-purple-500 hover:shadow-xl transition-shadow duration-300">
                     <div className="p-4 sm:p-6">
@@ -641,28 +717,49 @@ const PeerDetails = () => {
                                         className="flex items-center justify-between bg-gray-100 dark:bg-gray-900 rounded px-3 py-2 text-sm sm:text-base"
                                     >
                                         <span className="font-mono">{dns}</span>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="ml-2"
-                                                    onClick={async () => {
-                                                        try {
-                                                            await navigator.clipboard.writeText(dns);
-                                                            toast.success('DNS copied to clipboard');
-                                                        } catch {
-                                                            toast.error('Failed to copy DNS');
-                                                        }
-                                                    }}
-                                                >
-                                                    <Copy className="w-4 h-4 text-blue-600" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="top">
-                                                Copy DNS
-                                            </TooltipContent>
-                                        </Tooltip>
+
+                                        <div className='flex items-center justify-center gap-2'>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="ml-2"
+                                                        onClick={async () => {
+                                                            try {
+                                                                await navigator.clipboard.writeText(dns);
+                                                                toast.success('DNS copied to clipboard');
+                                                            } catch {
+                                                                toast.error('Failed to copy DNS');
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Copy className="w-4 h-4 text-blue-600" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="top">
+                                                    Copy DNS
+                                                </TooltipContent>
+                                            </Tooltip>
+
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="ml-2"
+                                                        onClick={() => {
+                                                            setSelectedDns(dns);
+                                                            setIsDeleteDnsModalOpen(true);
+                                                        }}
+                                                    >
+                                                        <Trash2 className="w-4 h-4 text-red-600" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                            </Tooltip>
+
+                                        </div>
+
                                     </li>
                                 ))}
                             </ul>
@@ -741,6 +838,20 @@ const PeerDetails = () => {
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleDeleteConfirm}
+            />
+
+            <DeleteDnsConfirmationModal
+                isOpen={isDeleteDnsModalOpen}
+                onClose={() => {
+                    setIsDeleteDnsModalOpen(false);
+                    setSelectedDns(null);
+                }}
+                onConfirm={() => {
+                    if (selectedDns) {
+                        deleteDns.mutate(selectedDns);
+                    }
+                }}
+                dnsAddress={selectedDns || ''}
             />
         </div>
     );
