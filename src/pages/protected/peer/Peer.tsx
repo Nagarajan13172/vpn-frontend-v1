@@ -63,7 +63,7 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
     datasets: [
       {
         label: 'RX',
-        data: Object.values(rxHistory).length ? Object.values(rxHistory) : Array(10).fill(0), // Use 0 as fallback for initial data
+        data: rxHistory.length ? rxHistory : Array(10).fill(0), // Use rxHistory directly
         borderColor: 'rgb(54, 162, 235)',
         backgroundColor: 'rgba(54, 162, 235, 0.2)',
         borderWidth: 2,
@@ -74,14 +74,12 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
     ],
   };
 
-
-
   const txChartData = {
     labels,
     datasets: [
       {
         label: 'TX',
-        data: Object.values(txHistory).length ? Object.values(txHistory) : Array(10).fill(0), // Use 0 as fallback for initial data
+        data: txHistory.length ? txHistory : Array(10).fill(0), // Use txHistory directly
         borderColor: 'rgb(255, 99, 132)',
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         borderWidth: 2,
@@ -97,7 +95,7 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
     maintainAspectRatio: false,
     animation: {
       duration: 5000,
-      easing: 'linear', // must be one of the allowed values
+      easing: 'linear',
     },
     plugins: {
       legend: {
@@ -105,11 +103,11 @@ const PeerCard = ({ peer, onPause, onDelete, onEdit, rxHistory, txHistory }: {
       },
       tooltip: {
         enabled: true,
-        mode: 'nearest',
+        mode: 'nearest' as const,
         intersect: false,
         callbacks: {
-          label: (tooltipItem) =>
-            `${tooltipItem.dataset.label}: ${formatDataSize(Number(tooltipItem.raw))}`,
+          title: () => '', // Hide the title (which shows the label/count)
+          label: (tooltipItem: any) => `${tooltipItem.dataset.label}: ${formatDataSize(tooltipItem.raw)}`,
         },
       },
     },
