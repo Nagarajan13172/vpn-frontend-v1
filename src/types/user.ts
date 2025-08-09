@@ -25,4 +25,5 @@ export interface User extends NewUser {
     id: string;
     role: { id: string; role: string };
     created_at: string;
+    paused: boolean;
 }

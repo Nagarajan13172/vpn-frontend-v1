@@ -1,5 +1,5 @@
 // src/pages/users/components/columns.tsx
-import { ArrowUpDown, Eye, MoreHorizontal, Pencil, Trash2Icon } from "lucide-react";
+import { ArrowUpDown, Eye, MoreHorizontal, Pause, Pencil, Play, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,7 +17,8 @@ import type { User } from "@/types/user";
 const createColumnConfig = (
   onEdit: (user: User) => void,
   onDelete: (user: User) => void,
-  navigate: (path: string) => void // Pass navigate as a parameter
+  navigate: (path: string) => void,// Pass navigate as a parameter
+  onPauseToggle: (user: User) => void,
 ): ColumnDef<User>[] => {
   return [
     {
@@ -70,6 +71,14 @@ const createColumnConfig = (
       },
     },
     {
+      accessorKey: "paused",
+      header: "Status",
+      cell: ({ row }) => {
+        const isPaused = row.getValue("paused") as boolean;
+        return <div>{isPaused ? "Paused" : "Active"}</div>;
+      },
+    },
+    {
       id: "actions",
       cell: ({ row }) => {
         const user = row.original;
@@ -86,18 +95,32 @@ const createColumnConfig = (
                 onClick={() => navigate(`/users/${user.id}/${user.username}`)}
               >
                 <>
-                 <Eye />
+                  <Eye />
                   View
                 </>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(user)}>
                 <Pencil />
                 Edit
-                </DropdownMenuItem>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDelete(user)}>
                 <Trash2Icon />
                 Delete
-                </DropdownMenuItem>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => onPauseToggle(user)}>
+                {user.paused ? (
+                  <>
+                    <Play className="mr-2 h-4 w-4" />
+                    Unpause
+                  </>
+                ) : (
+                  <>
+                    <Pause className="mr-2 h-4 w-4" />
+                    Pause
+                  </>
+                )}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -109,8 +132,9 @@ const createColumnConfig = (
 // Custom hook to provide columns with navigation
 export const useUserColumns = (
   onEdit: (user: User) => void,
-  onDelete: (user: User) => void
+  onDelete: (user: User) => void,
+  onPauseToggle: (user: User) => void
 ): ColumnDef<User>[] => {
   const navigate = useNavigate();
-  return createColumnConfig(onEdit, onDelete, navigate);
+  return createColumnConfig(onEdit, onDelete, navigate, onPauseToggle);
 };

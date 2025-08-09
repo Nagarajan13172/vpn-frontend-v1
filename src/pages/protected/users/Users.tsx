@@ -90,6 +90,15 @@ const UsersPage = () => {
     setIsDeleteModalOpen(true);
   };
 
+    const handlePauseToggle = (user: User) => {
+    setSelectedUser(user);
+    if (user.paused) {
+      unpauseMutation.mutate();
+    } else {
+      pauseMutation.mutate();
+    }
+  };
+
   const confirmDelete = () => {
     deleteMutation.mutate();
   };
@@ -149,6 +158,49 @@ const UsersPage = () => {
     onError: (err) => toast.error(err.message),
   });
 
+  const pauseMutation = useMutation({
+    mutationFn: async () => {
+      const token = getAuthToken();
+      const res = await fetch(`${base_path}/api/users/pause/${selectedUser?.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error((await res.json()).detail || "Failed to pause user.");
+      return res.json();
+    },
+    onSuccess: async () => {
+      toast.success("User paused successfully");
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      setSelectedUser(null);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const unpauseMutation = useMutation({
+    mutationFn: async () => {
+      const token = getAuthToken();
+      const res = await fetch(`${base_path}/api/users/unpause/${selectedUser?.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error((await res.json()).detail || "Failed to unpause user.");
+      return res.json();
+    },
+    onSuccess: async () => {
+      toast.success("User unpaused successfully");
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      setSelectedUser(null);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+
   const deleteMutation = useMutation({
     mutationFn: async () => {
       const token = getAuthToken();
@@ -195,7 +247,7 @@ const UsersPage = () => {
     },
   });
 
-  const columns = useUserColumns(openEditModal, handleDeleteRequest);
+  const columns = useUserColumns(openEditModal, handleDeleteRequest, handlePauseToggle );
 
   return (
     <div className="container mx-auto">

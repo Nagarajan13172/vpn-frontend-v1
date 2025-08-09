@@ -33,7 +33,6 @@ export function ClientTable({ columns, data }: ClientTableProps<User>) {
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = useState({});
 
-
     // api for users roles
     const { data: roleData } = useQuery({
         queryKey: ['user'],
@@ -56,7 +55,6 @@ export function ClientTable({ columns, data }: ClientTableProps<User>) {
             const data = await response.json();
             return Array.isArray(data) ? data : data.role || []; // Adjust based on API structure
         },
-
     });
 
     const table = useReactTable({

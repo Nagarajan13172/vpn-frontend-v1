@@ -10,6 +10,7 @@ import Users from './pages/protected/users/Users';
 import UserPeerView from './pages/protected/users/UserPeerView';
 import { AnimatePresence } from 'framer-motion';
 import { PageWrapper } from './utils/PageWrapper';
+import Settings from './pages/protected/settings/Settings';
 
 
 function App() {
@@ -29,7 +30,7 @@ function App() {
               <Route path="/peers/:id" element={<PageWrapper keyName='peers-id'><PeerDetails /></PageWrapper>} />
               <Route path="/users" element={<PageWrapper keyName='users'><Users /></PageWrapper>} />
               <Route path="/users/:id/:username" element={<PageWrapper keyName='users-id-username'><UserPeerView /></PageWrapper>} />
-              <Route path="/settings" element={<PageWrapper keyName='settings'><div>Settings Page</div></PageWrapper>} />
+              <Route path="/settings" element={<PageWrapper keyName='settings'><Settings /></PageWrapper>} />
               <Route path="/help" element={<PageWrapper keyName='help'><div>Help Page</div></PageWrapper>} />
             </Route>
           </Route>

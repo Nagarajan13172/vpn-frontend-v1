@@ -716,7 +716,15 @@ const PeerDetails = () => {
                                         key={index}
                                         className="flex items-center justify-between bg-gray-100 dark:bg-gray-900 rounded px-3 py-2 text-sm sm:text-base"
                                     >
-                                        <span className="font-mono">{dns}</span>
+                                        <span
+                                            className="font-mono cursor-pointer"
+                                            onClick={() => {
+                                                const url = `http://${dns}`;
+                                                window.open(url, '_blank', 'noopener,noreferrer');
+                                            }}
+                                        >
+                                            {dns}
+                                        </span>
 
                                         <div className='flex items-center justify-center gap-2'>
                                             <Tooltip>

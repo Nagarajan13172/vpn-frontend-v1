@@ -14,4 +14,5 @@ export interface User {
   role?: Role; // Optional, as it may not always be populated
   peer_count: number | string; // Allow string for API response
   created_at?: string;
+  paused: boolean;
 }
