@@ -1,15 +1,17 @@
 import {
-    ChartNetwork,
-    LayoutDashboard,
-    Settings,
-    UserPlus,
+  ChartNetwork,
+  LayoutDashboard,
+  Settings,
+  UserPlus,
+  UserRoundSearch,
 } from "lucide-react";
 
 export const mainItems = [
-    { label: "Dashboard", href: "/", icon: LayoutDashboard },
-    { label: "Peer", href: "/peers", icon: ChartNetwork },
-    { label: "Users", href: "/users", icon: UserPlus, },
-    { label: "Settings", href: "/settings", icon: Settings },
+  { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Peer", href: "/peers", icon: ChartNetwork },
+  { label: "Users", href: "/users", icon: UserPlus, },
+  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "Finder", href: "/finder", icon: UserRoundSearch },
 ];
 
 

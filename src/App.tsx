@@ -11,6 +11,7 @@ import UserPeerView from './pages/protected/users/UserPeerView';
 import { AnimatePresence } from 'framer-motion';
 import { PageWrapper } from './utils/PageWrapper';
 import Settings from './pages/protected/settings/Settings';
+import Finder from './pages/protected/finder/Finder';
 
 
 function App() {
@@ -31,7 +32,7 @@ function App() {
               <Route path="/users" element={<PageWrapper keyName='users'><Users /></PageWrapper>} />
               <Route path="/users/:id/:username" element={<PageWrapper keyName='users-id-username'><UserPeerView /></PageWrapper>} />
               <Route path="/settings" element={<PageWrapper keyName='settings'><Settings /></PageWrapper>} />
-              <Route path="/help" element={<PageWrapper keyName='help'><div>Help Page</div></PageWrapper>} />
+              <Route path="/finder" element={<PageWrapper keyName='finder'><Finder /></PageWrapper>} />
             </Route>
           </Route>
           <Route path="*" element={<PageWrapper keyName='not-found'><div>404 Not Found</div></PageWrapper>} />

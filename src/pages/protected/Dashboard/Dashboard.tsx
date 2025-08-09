@@ -69,7 +69,7 @@ export default function Dashboard() {
   const [peers, setPeers] = useState<any[]>([])
   const [rxHistory, setRxHistory] = useState<{ [peerId: string]: number[] }>({})
   const [txHistory, setTxHistory] = useState<{ [peerId: string]: number[] }>({})
-  const [selectedUnit, setSelectedUnit] = useState<'B' | 'KB' | 'MB' | 'GB' | 'TB'>('B')
+  const [selectedUnit, setSelectedUnit] = useState<'B' | 'KB' | 'MB' | 'GB' | 'TB'>('MB')
 
   useEffect(() => {
     setBreadcrumbs([

@@ -34,7 +34,7 @@ import { useBreadcrumb } from '@/components/breadcrumb/BreadcrumbContext';
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend);
 
-interface PeersData {
+export interface PeersData {
   id: string;
   peer_name: string;
   assigned_ip: string;
@@ -314,6 +314,8 @@ const PauseConfirmationModal = ({ isOpen, onClose, onConfirm, isOnline }: {
     </Dialog>
   );
 };
+
+export { PeerCard };
 
 export default function PeersDashboard() {
 
