@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAuthToken } from '@/api/getAuthToken';
 import { base_path } from '@/api/api';
 import { toast } from 'sonner';
-import { formatDataSize } from '@/utils/Formater';
+import { formatData } from '@/utils/Formater';
 import DeleteConfirmationModal from '../peer/components/DeleteConfirmationModel';
 import { useUserStore } from '@/global/useUserStore';
 import QRCode from "react-qr-code";
@@ -53,6 +53,7 @@ const PeerDetails = () => {
     const queryClient = useQueryClient();
     const [rxHistory, setRxHistory] = useState<number[]>([]);
     const [txHistory, setTxHistory] = useState<number[]>([]);
+    const [selectedUnit, setSelectedUnit] = useState<'B' | 'KB' | 'MB' | 'GB' | 'TB'>('MB');
 
     useEffect(() => {
         setBreadcrumbs([
@@ -317,7 +318,7 @@ const PeerDetails = () => {
                     label: (ctx: any) => {
                         const val = Number(ctx.raw) || 0;
                         const label = ctx.dataset.label;
-                        return `${label}: ${formatDataSize(val)}`;
+                        return `${label}: ${formatData(val, selectedUnit)}`;
                     },
                 },
             },
@@ -334,14 +335,14 @@ const PeerDetails = () => {
                 ticks: {
                     color: theme === "dark" ? "#9ca3af" : "#6b7280",
                     callback: function (tickValue: string | number) {
-                        return typeof tickValue === "number" ? formatDataSize(tickValue) : tickValue;
+                        return typeof tickValue === "number" ? formatData(tickValue, selectedUnit) : tickValue;
                     },
                 },
                 suggestedMax: maxVal * 1.2,
                 beginAtZero: true,
             },
         },
-    }), [maxVal, theme]);
+    }), [maxVal, theme, selectedUnit]);
 
     const rxChartData = {
         labels,
@@ -494,20 +495,7 @@ const PeerDetails = () => {
                         </div>
                     </div>
                 </div>
-                <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-shadow duration-300">
-                    <div className="p-4 sm:p-6">
-                        <div className="flex items-centermb-2">
-                            <div className="flex items-center gap-2">
-                                <DownloadCloud className="h-5 w-5 text-green-500" />
-                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Total Received</h3>
-                            </div>
-                        </div>
-                        <div className='flex items-center justify-between mt-2'>
-                            <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300">{formatDataSize(peerData?.rx)}</p>
-                            <Download className="h-6 w-6 sm:h-7 sm:w-7 text-green-500" />
-                        </div>
-                    </div>
-                </div>
+                        {/* Total Sent with dropdown */}
                 <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-yellow-500 hover:shadow-xl transition-shadow duration-300">
                     <div className="p-4 sm:p-6">
                         <div className="flex items-center justify-between mb-2">
@@ -516,12 +504,57 @@ const PeerDetails = () => {
                                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Total Sent</h3>
                             </div>
                         </div>
-                        <div className='flex items-center justify-between mt-2'>
-                            <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300">{formatDataSize(peerData?.tx)}</p>
+                        <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center gap-2">
+                                <span>
+                                    {formatData(peerData?.tx || 0, selectedUnit).split(" ")[0]}
+                                </span>
+                                <select
+                                    className=""
+                                    value={selectedUnit}
+                                    onChange={e => setSelectedUnit(e.target.value as "B" | "KB" | "MB" | "GB" | "TB")}
+                                >
+                                    <option value="B" className='dark:text-black'>B</option>
+                                    <option value="KB" className='dark:text-black'>KB</option>
+                                    <option value="MB" className='dark:text-black'>MB</option>
+                                    <option value="GB" className='dark:text-black'>GB</option>
+                                    <option value="TB" className='dark:text-black'>TB</option>
+                                </select>
+                            </div>
                             <Upload className="h-6 w-6 sm:h-7 sm:w-7 text-yellow-500" />
                         </div>
                     </div>
                 </div>
+                {/* Total Received with dropdown */}
+                <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-shadow duration-300">
+                    <div className="p-4 sm:p-6">
+                        <div className="flex items-center mb-2 gap-2">
+                            <DownloadCloud className="h-5 w-5 text-green-500" />
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Total Received</h3>
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center gap-2">
+                                <span>
+                                    {formatData(peerData?.rx || 0, selectedUnit).split(" ")[0]}
+                                </span>
+                                <select
+                                    className=""
+                                    value={selectedUnit}
+                                    onChange={e => setSelectedUnit(e.target.value as "B" | "KB" | "MB" | "GB" | "TB")}
+                                >
+                                    <option value="B" className='dark:text-black'>B</option>
+                                    <option value="KB" className='dark:text-black'>KB</option>
+                                    <option value="MB" className='dark:text-black'>MB</option>
+                                    <option value="GB" className='dark:text-black'>GB</option>
+                                    <option value="TB" className='dark:text-black'>TB</option>
+                                </select>
+                            </div>
+                            <Download className="h-6 w-6 sm:h-7 sm:w-7 text-green-500" />
+                        </div>
+                    </div>
+                </div>
+        
+                {/* Total Usage with dropdown */}
                 <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 border-purple-500 hover:shadow-xl transition-shadow duration-300">
                     <div className="p-4 sm:p-6">
                         <div className="flex items-center justify-between mb-2">
@@ -530,10 +563,23 @@ const PeerDetails = () => {
                                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Total Usage</h3>
                             </div>
                         </div>
-                        <div className='flex items-center justify-between mt-2'>
-                            <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300">
-                                {formatDataSize((peerData?.tx || 0) + (peerData?.rx || 0))}
-                            </p>
+                        <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center gap-2">
+                                <span>
+                                    {formatData((peerData?.tx || 0) + (peerData?.rx || 0), selectedUnit).split(" ")[0]}
+                                </span>
+                                <select
+                                    className=""
+                                    value={selectedUnit}
+                                    onChange={e => setSelectedUnit(e.target.value as "B" | "KB" | "MB" | "GB" | "TB")}
+                                >
+                                    <option value="B" className='dark:text-black'>B</option>
+                                    <option value="KB" className='dark:text-black'>KB</option>
+                                    <option value="MB" className='dark:text-black'>MB</option>
+                                    <option value="GB" className='dark:text-black'>GB</option>
+                                    <option value="TB" className='dark:text-black'>TB</option>
+                                </select>
+                            </div>
                             <BarChart className="h-6 w-6 sm:h-7 sm:w-7 text-purple-500" />
                         </div>
                     </div>

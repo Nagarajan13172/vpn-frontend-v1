@@ -1,5 +1,5 @@
 
-import { Outlet, useNavigate } from "react-router";
+import { Outlet } from "react-router";
 import {
     SidebarInset,
     SidebarProvider,
@@ -12,8 +12,7 @@ import CustomBreadcrumb from "@/components/breadcrumb/CustomBreadcrumb";
 import { getCookie } from "typescript-cookie";
 
 export default function SideMenuLayout() {
-    const open = getCookie("sidebar_state") === "false" ? true : false;
-
+    const open = getCookie("sidebar_state") === "true" ? true : false;
 
     return (
         <SidebarProvider defaultOpen={open}>

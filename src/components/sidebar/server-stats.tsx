@@ -42,7 +42,6 @@ export function ServerStats({ stats, history }: { stats: Stats; history: StatsHi
         return arr.map((ar) => Number(ar[key]));
     };
 
-
     // const blockIOChartData = {
     //     labels,
     //     datasets: [
@@ -68,7 +67,6 @@ export function ServerStats({ stats, history }: { stats: Stats; history: StatsHi
     //         },
     //     ],
     // };
-
 
     const netIOChartData = {
         labels,
@@ -125,7 +123,10 @@ export function ServerStats({ stats, history }: { stats: Stats; history: StatsHi
                     </div>
                     <span className="font-mono text-muted-foreground">{stats.CPUPerc}</span>
                 </div>
-                <Progress value={cpuPercentage} className="h-2" />
+                <Progress
+                    value={cpuPercentage}
+                    className="h-2 transition-all duration-5000"
+                />
             </div>
             <div>
                 <div className="flex items-center justify-between mb-1">
