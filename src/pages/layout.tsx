@@ -37,7 +37,20 @@ export default function SideMenuLayout() {
                     </div>
                 </header>
                 <div className="p-2 md:p-4 w-full overflow-x-hidden">
-                    <Outlet />
+                    <div className="min-h-[80h]">
+                        <Outlet />
+                    </div>
+                    <footer className="w-full text-center py-4 text-sm text-muted-foreground">
+                        Made with ❣️ by{" "}
+                        <a
+                            href="https://bloomskilltech.youngstorage.in/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline hover:text-primary text-blue-500"
+                        >
+                            BloomSkillTech
+                        </a>
+                    </footer>
                 </div>
             </SidebarInset>
         </SidebarProvider>
